@@ -479,6 +479,103 @@
                 </StackPanel>
             </Border>
 
+            <!-- ==================== Battery Row ==================== -->
+            <Border Style="{StaticResource MetricRowStyle}"
+                    MouseLeftButtonDown="BatteryRow_Click"
+                    Visibility="{Binding Battery.HasBattery, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Width="80">
+                            <TextBlock Text="Battery" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding BatterySummary}" Style="{StaticResource MetricValueStyle}"/>
+                        </StackPanel>
+
+                        <comp:SparklineChart x:Name="BatteryChart" Grid.Column="1" Height="40" Margin="4,0"
+                            Values="{Binding BatteryValues}"
+                            StrokeColor="#FFFFC107" MinValue="0" MaxValue="100"/>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                   Foreground="#60FFFFFF" Margin="4,0"/>
+                    </Grid>
+
+                    <!-- Battery Detail Panel -->
+                    <StackPanel Visibility="{Binding IsBatteryDetailVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,6,0,0">
+                        <Border Background="#20FFFFFF" CornerRadius="4" Padding="8,6" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Status"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.StatusText}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Time"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.TimeRemaining}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Rate"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.ChargeDischargeRate, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F1} W'}"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Voltage"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.Voltage, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F2} V'}"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Health"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.BatteryHealth, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F1}%'}"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Design Capacity"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.DesignedCapacity, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F0} mWh'}"/>
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Full Charge"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.FullChargeCapacity, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F0} mWh'}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Battery charge bar -->
+                        <Grid Margin="0,4,0,0">
+                            <Border Background="#20FFFFFF" CornerRadius="3" Height="10"/>
+                            <Border CornerRadius="3" Height="10"
+                                    HorizontalAlignment="Left"
+                                    Width="{Binding Battery.ChargeLevel, Converter={StaticResource PercentToWidthLarge}}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#FFC107"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Battery.IsCharging}" Value="True">
+                                                <Setter Property="Background" Value="#4CAF50"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ==================== Network Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
                     MouseLeftButtonDown="NetRow_Click">

@@ -29,6 +29,7 @@ public partial class DashboardPopup : Window
         CpuChart.InvalidateValues();
         GpuChart.InvalidateValues();
         RamChart.InvalidateValues();
+        BatteryChart.InvalidateValues();
         NetDownChart.InvalidateValues();
         NetUpChart.InvalidateValues();
     }
@@ -101,6 +102,11 @@ public partial class DashboardPopup : Window
     private void DiskRow_Click(object sender, MouseButtonEventArgs e)
     {
         ViewModel?.ToggleDiskDetailCommand.Execute(null);
+    }
+
+    private void BatteryRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleBatteryDetailCommand.Execute(null);
     }
 
     private void NetRow_Click(object sender, MouseButtonEventArgs e)

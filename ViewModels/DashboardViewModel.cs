@@ -24,6 +24,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public List<double> RamValues { get; } = new();
     public List<double> NetDownValues { get; } = new();
     public List<double> NetUpValues { get; } = new();
+    public List<double> BatteryValues { get; } = new();
 
     // Expose model objects
     public CpuData Cpu => _hwService.Cpu;
@@ -32,6 +33,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public NetData Net => _netService.Data;
     public DiskData Disk => _diskService.Data;
     public WeatherData Weather => _weatherService.Data;
+    public BatteryData Battery => _hwService.Battery;
 
     // Detail panel visibility
     [ObservableProperty] private bool _isWeatherDetailVisible;
@@ -39,6 +41,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _isGpuDetailVisible;
     [ObservableProperty] private bool _isRamDetailVisible;
     [ObservableProperty] private bool _isDiskDetailVisible;
+    [ObservableProperty] private bool _isBatteryDetailVisible;
     [ObservableProperty] private bool _isNetDetailVisible;
 
     // Formatted summary strings
@@ -46,6 +49,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _gpuSummary = "0%";
     [ObservableProperty] private string _ramSummary = "0 / 0 GB";
     [ObservableProperty] private string _diskSummary = "0%";
+    [ObservableProperty] private string _batterySummary = "--";
     [ObservableProperty] private string _netSummary = "-- / --";
 
     public DashboardViewModel()
@@ -64,6 +68,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             RamValues.Add(0);
             NetDownValues.Add(0);
             NetUpValues.Add(0);
+            BatteryValues.Add(0);
         }
 
         _hwService.DataUpdated += OnHardwareUpdated;
@@ -88,6 +93,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             CpuSummary = $"{Cpu.TotalLoad:F0}%";
             GpuSummary = $"{Gpu.CoreLoad:F0}%";
             RamSummary = $"{Ram.UsedGb:F1} / {Ram.TotalGb:F1} GB";
+
+            if (Battery.HasBattery)
+            {
+                PushValue(BatteryValues, Battery.ChargeLevel);
+                BatterySummary = $"{Battery.ChargeLevel:F0}%";
+                OnPropertyChanged(nameof(Battery));
+            }
 
             OnPropertyChanged(nameof(Cpu));
             OnPropertyChanged(nameof(Gpu));
@@ -151,6 +163,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void ToggleDiskDetail() => IsDiskDetailVisible = !IsDiskDetailVisible;
+
+    [RelayCommand]
+    private void ToggleBatteryDetail() => IsBatteryDetailVisible = !IsBatteryDetailVisible;
 
     [RelayCommand]
     private void ToggleNetDetail() => IsNetDetailVisible = !IsNetDetailVisible;
