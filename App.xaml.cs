@@ -111,6 +111,9 @@ public partial class App : Application
         AddSectionToggle(sectionsMenu, "Disk", () => _viewModel!.Sections.ShowDisk, v => _viewModel!.Sections.ShowDisk = v);
         AddSectionToggle(sectionsMenu, "Battery", () => _viewModel!.Sections.ShowBattery, v => _viewModel!.Sections.ShowBattery = v);
         AddSectionToggle(sectionsMenu, "Network", () => _viewModel!.Sections.ShowNet, v => _viewModel!.Sections.ShowNet = v);
+        AddSectionToggle(sectionsMenu, "Processes", () => _viewModel!.Sections.ShowProcesses, v => _viewModel!.Sections.ShowProcesses = v);
+        AddSectionToggle(sectionsMenu, "Bluetooth", () => _viewModel!.Sections.ShowBluetooth, v => _viewModel!.Sections.ShowBluetooth = v);
+        AddSectionToggle(sectionsMenu, "Uptime", () => _viewModel!.Sections.ShowUptime, v => _viewModel!.Sections.ShowUptime = v);
         contextMenu.Items.Add(sectionsMenu);
 
         contextMenu.Items.Add(new Separator());

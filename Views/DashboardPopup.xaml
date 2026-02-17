@@ -150,6 +150,97 @@
                 </StackPanel>
             </Border>
 
+            <!-- ==================== Processes Row ==================== -->
+            <Border Style="{StaticResource MetricRowStyle}"
+                    MouseLeftButtonDown="ProcessesRow_Click"
+                    Visibility="{Binding Sections.ShowProcesses, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Width="80">
+                            <TextBlock Text="Processes" Style="{StaticResource MetricLabelStyle}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Processes.TopConsumerName}" Foreground="#DDFFFFFF" FontSize="10"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="60"/>
+                                <TextBlock Text="{Binding Processes.TopConsumerCpu, StringFormat={} {0:F0}%}"
+                                           Foreground="#80FFFFFF" FontSize="10" Margin="2,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Mini bar chart for top processes -->
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding TopProcesses}"
+                                      VerticalAlignment="Center" Margin="8,2">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1" Height="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="#20FFFFFF" CornerRadius="2"/>
+                                        <Border Background="#FF42A5F5" CornerRadius="2" HorizontalAlignment="Left"
+                                                Width="{Binding CpuPercent, Converter={StaticResource PercentToWidth}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                   Foreground="#60FFFFFF" Margin="4,0"/>
+                    </Grid>
+
+                    <!-- Processes Detail Panel -->
+                    <StackPanel Visibility="{Binding IsProcessesDetailVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,6,0,0">
+                        <ItemsControl ItemsSource="{Binding TopProcesses}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#15FFFFFF" CornerRadius="3" Padding="8,4" Margin="0,1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="56"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" Foreground="#DDFFFFFF" FontSize="10"
+                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="100"/>
+                                                <TextBlock Foreground="#60FFFFFF" FontSize="9" VerticalAlignment="Center" Margin="4,0,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value=""/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding InstanceCount}" Value="1">
+                                                                    <Setter Property="Text" Value=""/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1" Foreground="#FF42A5F5" FontSize="10"
+                                                       Text="{Binding CpuPercent, StringFormat={}{0:F1}%}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                                            <TextBlock Grid.Column="2" Foreground="#80FFFFFF" FontSize="10"
+                                                       Text="{Binding MemoryMb, StringFormat={}{0:F0} MB}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ==================== CPU Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
                     MouseLeftButtonDown="CpuRow_Click"
@@ -583,6 +674,102 @@
             </Border>
             </Border>
 
+            <!-- ==================== Bluetooth Row ==================== -->
+            <Border Style="{StaticResource MetricRowStyle}"
+                    MouseLeftButtonDown="BluetoothRow_Click"
+                    Visibility="{Binding Sections.ShowBluetooth, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE702;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                       Foreground="#FF42A5F5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Bluetooth" Style="{StaticResource MetricLabelStyle}"/>
+                                <TextBlock Foreground="#DDFFFFFF" FontSize="11">
+                                    <TextBlock.Text>
+                                        <Binding Path="Bluetooth.ConnectedCount" StringFormat="{}{0} connected"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                   Foreground="#60FFFFFF" Margin="4,0"/>
+                    </Grid>
+
+                    <!-- Bluetooth Detail Panel -->
+                    <StackPanel Visibility="{Binding IsBluetoothDetailVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,6,0,0">
+                        <ItemsControl ItemsSource="{Binding BluetoothDevices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#15FFFFFF" CornerRadius="3" Padding="8,5" Margin="0,1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
+                                                       FontSize="14" Foreground="#FF42A5F5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Foreground="#DDFFFFFF" FontSize="10"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding DeviceType}" Foreground="#60FFFFFF" FontSize="9"/>
+                                                    <TextBlock Foreground="#60FFFFFF" FontSize="9" Margin="6,0,0,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="Connected"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                                                        <Setter Property="Text" Value="Disconnected"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                                                <TextBlock Foreground="#90FFFFFF" FontSize="10" VerticalAlignment="Center"
+                                                           Margin="4,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value=""/>
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding BatteryPercent}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Foreground="#40FFFFFF" FontSize="9" Margin="4,4,0,0"
+                                   Text="Battery levels shown when reported by device"
+                                   FontStyle="Italic"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ==================== Network Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
                     MouseLeftButtonDown="NetRow_Click"
@@ -680,6 +867,73 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ==================== Uptime Row ==================== -->
+            <Border Style="{StaticResource MetricRowStyle}"
+                    MouseLeftButtonDown="UptimeRow_Click"
+                    Visibility="{Binding Sections.ShowUptime, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                       Foreground="#FF66BB6A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Uptime" Style="{StaticResource MetricLabelStyle}"/>
+                                <TextBlock Text="{Binding Uptime.Uptime}" Foreground="#DDFFFFFF" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1" Text="{Binding Uptime.MachineName}"
+                                   Foreground="#60FFFFFF" FontSize="10"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0"/>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                   Foreground="#60FFFFFF" Margin="4,0"/>
+                    </Grid>
+
+                    <!-- Uptime Detail Panel -->
+                    <StackPanel Visibility="{Binding IsUptimeDetailVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,6,0,0">
+                        <Border Background="#20FFFFFF" CornerRadius="4" Padding="8,6" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="OS"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Uptime.OsVersion}" TextTrimming="CharacterEllipsis"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Machine"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Uptime.MachineName}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="User"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Uptime.UserName}"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Boot Time"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Uptime.BootTime, StringFormat={}{0:MMM d, yyyy h:mm tt}}"/>
+                            </Grid>
+                        </Border>
                     </StackPanel>
                 </StackPanel>
             </Border>

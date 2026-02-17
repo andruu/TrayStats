@@ -114,6 +114,21 @@ public partial class DashboardPopup : Window
         ViewModel?.ToggleNetDetailCommand.Execute(null);
     }
 
+    private void ProcessesRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleProcessesDetailCommand.Execute(null);
+    }
+
+    private void BluetoothRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleBluetoothDetailCommand.Execute(null);
+    }
+
+    private void UptimeRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleUptimeDetailCommand.Execute(null);
+    }
+
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         Hide();

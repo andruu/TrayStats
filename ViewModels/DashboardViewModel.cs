@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +20,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly NetworkMonitorService _netService;
     private readonly DiskMonitorService _diskService;
     private readonly WeatherService _weatherService;
+    private readonly ProcessMonitorService _processService;
+    private readonly BluetoothMonitorService _bluetoothService;
+    private readonly UptimeMonitorService _uptimeService;
     private readonly Dispatcher _dispatcher;
 
     public HardwareContext HardwareContext => _hwContext;
@@ -39,6 +43,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public NetData Net => _netService.Data;
     public DiskData Disk => _diskService.Data;
     public WeatherData Weather => _weatherService.Data;
+    public ProcessData Processes => _processService.Data;
+    public BluetoothData Bluetooth => _bluetoothService.Data;
+    public UptimeData Uptime => _uptimeService.Data;
+
+    // UI-thread collections for cross-thread-safe binding
+    public ObservableCollection<ProcessInfo> TopProcesses { get; } = new();
+    public ObservableCollection<BluetoothDeviceInfo> BluetoothDevices { get; } = new();
 
     // Section visibility
     public SectionVisibility Sections { get; } = new();
@@ -51,6 +62,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _isDiskDetailVisible;
     [ObservableProperty] private bool _isBatteryDetailVisible;
     [ObservableProperty] private bool _isNetDetailVisible;
+    [ObservableProperty] private bool _isProcessesDetailVisible;
+    [ObservableProperty] private bool _isBluetoothDetailVisible;
+    [ObservableProperty] private bool _isUptimeDetailVisible;
 
     // Formatted summary strings
     [ObservableProperty] private string _cpuSummary = "0%";
@@ -72,6 +86,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _netService = new NetworkMonitorService();
         _diskService = new DiskMonitorService(_hwContext);
         _weatherService = new WeatherService();
+        _processService = new ProcessMonitorService();
+        _bluetoothService = new BluetoothMonitorService();
+        _uptimeService = new UptimeMonitorService();
 
         for (int i = 0; i < MaxDataPoints; i++)
         {
@@ -90,6 +107,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _netService.DataUpdated += OnNetworkUpdated;
         _diskService.DataUpdated += OnDiskUpdated;
         _weatherService.DataUpdated += OnWeatherUpdated;
+        _processService.DataUpdated += OnProcessesUpdated;
+        _bluetoothService.DataUpdated += OnBluetoothUpdated;
+        _uptimeService.DataUpdated += OnUptimeUpdated;
 
         _hwContext.Start();
         _cpuService.Start();
@@ -99,6 +119,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _netService.Start();
         _diskService.Start();
         _weatherService.Start();
+        _processService.Start();
+        _bluetoothService.Start();
+        _uptimeService.Start();
     }
 
     private void OnCpuUpdated()
@@ -174,6 +197,36 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         });
     }
 
+    private void OnProcessesUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            TopProcesses.Clear();
+            foreach (var p in Processes.LatestSnapshot)
+                TopProcesses.Add(p);
+            OnPropertyChanged(nameof(Processes));
+        });
+    }
+
+    private void OnBluetoothUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            BluetoothDevices.Clear();
+            foreach (var d in Bluetooth.LatestDevices)
+                BluetoothDevices.Add(d);
+            OnPropertyChanged(nameof(Bluetooth));
+        });
+    }
+
+    private void OnUptimeUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            OnPropertyChanged(nameof(Uptime));
+        });
+    }
+
     public event Action? InvalidateCharts;
 
     private static void PushValue(List<double> values, double newValue)
@@ -204,6 +257,15 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ToggleNetDetail() => IsNetDetailVisible = !IsNetDetailVisible;
 
+    [RelayCommand]
+    private void ToggleProcessesDetail() => IsProcessesDetailVisible = !IsProcessesDetailVisible;
+
+    [RelayCommand]
+    private void ToggleBluetoothDetail() => IsBluetoothDetailVisible = !IsBluetoothDetailVisible;
+
+    [RelayCommand]
+    private void ToggleUptimeDetail() => IsUptimeDetailVisible = !IsUptimeDetailVisible;
+
     public void Dispose()
     {
         _cpuService.Dispose();
@@ -213,6 +275,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _netService.Dispose();
         _diskService.Dispose();
         _weatherService.Dispose();
+        _processService.Dispose();
+        _bluetoothService.Dispose();
+        _uptimeService.Dispose();
         _hwContext.Dispose();
     }
 }
