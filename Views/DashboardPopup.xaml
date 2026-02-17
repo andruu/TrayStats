@@ -466,12 +466,18 @@
                         </Border>
 
                         <!-- RAM usage bar -->
-                        <Grid Margin="0,4,0,0">
-                            <Border Background="#20FFFFFF" CornerRadius="3" Height="10"/>
-                            <Border Background="#9C27B0" CornerRadius="3" Height="10"
-                                    HorizontalAlignment="Left"
-                                    Width="{Binding Ram.Load, Converter={StaticResource PercentToWidthLarge}}"/>
-                        </Grid>
+                        <ProgressBar Value="{Binding Ram.Load}" Minimum="0" Maximum="100"
+                                     Height="10" Margin="0,4,0,0" Foreground="#9C27B0">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Grid>
+                                        <Border Background="#20FFFFFF" CornerRadius="3" x:Name="PART_Track"/>
+                                        <Border CornerRadius="3" HorizontalAlignment="Left"
+                                                Background="{TemplateBinding Foreground}" x:Name="PART_Indicator"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                        </ProgressBar>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -595,7 +601,18 @@
 
                         <comp:SparklineChart x:Name="BatteryChart" Grid.Column="1" Height="40" Margin="4,0"
                             Values="{Binding BatteryValues}"
-                            StrokeColor="#FFFFC107" MinValue="0" MaxValue="100"/>
+                            MinValue="0" MaxValue="100">
+                            <comp:SparklineChart.Style>
+                                <Style TargetType="comp:SparklineChart">
+                                    <Setter Property="StrokeColor" Value="#FFFFC107"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Battery.IsPluggedIn}" Value="True">
+                                            <Setter Property="StrokeColor" Value="#FF4CAF50"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </comp:SparklineChart.Style>
+                        </comp:SparklineChart>
 
                         <TextBlock Grid.Column="2" VerticalAlignment="Center"
                                    Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
@@ -652,23 +669,28 @@
                         </Border>
 
                         <!-- Battery charge bar -->
-                        <Grid Margin="0,4,0,0">
-                            <Border Background="#20FFFFFF" CornerRadius="3" Height="10"/>
-                            <Border CornerRadius="3" Height="10"
-                                    HorizontalAlignment="Left"
-                                    Width="{Binding Battery.ChargeLevel, Converter={StaticResource PercentToWidthLarge}}">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#FFC107"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Battery.IsCharging}" Value="True">
-                                                <Setter Property="Background" Value="#4CAF50"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                            </Border>
-                        </Grid>
+                        <ProgressBar Value="{Binding Battery.ChargeLevel}" Minimum="0" Maximum="100"
+                                     Height="10" Margin="0,4,0,0">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Grid>
+                                        <Border Background="#20FFFFFF" CornerRadius="3" x:Name="PART_Track"/>
+                                        <Border CornerRadius="3" HorizontalAlignment="Left"
+                                                Background="{TemplateBinding Foreground}" x:Name="PART_Indicator"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Foreground" Value="#FFC107"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Battery.IsPluggedIn}" Value="True">
+                                            <Setter Property="Foreground" Value="#4CAF50"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
                     </StackPanel>
                 </StackPanel>
             </Border>
