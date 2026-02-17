@@ -89,7 +89,9 @@ public sealed class HardwareMonitorService : IDisposable
     {
         try
         {
-            _computer.Accept(_visitor);
+            try { _computer.Accept(_visitor); }
+            catch { /* hardware topology changed, continue with stale data */ }
+
             UpdateCpu();
             if (_needsCpuFallback) UpdateCpuFallback();
             UpdateGpu();
@@ -216,14 +218,92 @@ public sealed class HardwareMonitorService : IDisposable
 
     private void UpdateGpu()
     {
-        foreach (var hw in _computer.Hardware)
+        // Snapshot GPU hardware to avoid collection-modified issues
+        var gpus = new List<IHardware>();
+        try
         {
-            if (hw.HardwareType is not (HardwareType.GpuNvidia or HardwareType.GpuAmd or HardwareType.GpuIntel))
-                continue;
+            foreach (var hw in _computer.Hardware)
+            {
+                if (hw.HardwareType is HardwareType.GpuNvidia or HardwareType.GpuAmd or HardwareType.GpuIntel)
+                    gpus.Add(hw);
+            }
+        }
+        catch { return; }
 
-            Gpu.Name = hw.Name;
+        if (gpus.Count == 0) return;
 
-            foreach (var sensor in hw.Sensors)
+        // Find the GPU with the highest activity
+        IHardware? bestGpu = null;
+        float bestLoad = -1f;
+
+        foreach (var hw in gpus)
+        {
+            try
+            {
+                // Check "GPU Core" load first, then fall back to highest D3D load
+                float coreLoad = 0f;
+                foreach (var sensor in hw.Sensors)
+                {
+                    if (sensor.Value is not { } val) continue;
+                    if (sensor.SensorType == SensorType.Load)
+                    {
+                        if (sensor.Name == "GPU Core")
+                        {
+                            coreLoad = val;
+                            break;
+                        }
+                        if (sensor.Name.StartsWith("D3D") && val > coreLoad)
+                            coreLoad = val;
+                    }
+                }
+
+                bool isBetter = false;
+                if (bestGpu == null)
+                    isBetter = true;
+                else if (coreLoad > bestLoad)
+                    isBetter = true;
+                else if (coreLoad == bestLoad)
+                {
+                    int Priority(HardwareType t) => t switch
+                    {
+                        HardwareType.GpuNvidia => 3,
+                        HardwareType.GpuAmd => 2,
+                        HardwareType.GpuIntel => 1,
+                        _ => 0
+                    };
+                    isBetter = Priority(hw.HardwareType) > Priority(bestGpu.HardwareType);
+                }
+
+                if (isBetter)
+                {
+                    bestGpu = hw;
+                    bestLoad = coreLoad;
+                }
+            }
+            catch { /* sensor read failed for this GPU, skip */ }
+        }
+
+        if (bestGpu == null) return;
+
+        try
+        {
+            Gpu.Name = bestGpu.Name;
+
+            // Reset values so stale data from a previous GPU doesn't persist
+            Gpu.CoreLoad = 0;
+            Gpu.Temperature = 0;
+            Gpu.CoreClock = 0;
+            Gpu.MemoryClock = 0;
+            Gpu.FanSpeed = 0;
+            Gpu.FanPercent = 0;
+            Gpu.MemoryUsed = 0;
+            Gpu.MemoryTotal = 0;
+            Gpu.MemoryLoad = 0;
+            Gpu.Power = 0;
+
+            float bestD3DLoad = 0;
+
+            foreach (var sensor in bestGpu.Sensors)
             {
                 if (sensor.Value is not { } val) continue;
 
@@ -232,7 +312,10 @@ public sealed class HardwareMonitorService : IDisposable
                     case SensorType.Load when sensor.Name == "GPU Core":
                         Gpu.CoreLoad = val;
                         break;
-                    case SensorType.Temperature when sensor.Name == "GPU Core":
+                    case SensorType.Load when sensor.Name.StartsWith("D3D"):
+                        if (val > bestD3DLoad) bestD3DLoad = val;
+                        break;
+                    case SensorType.Temperature when sensor.Name.Contains("GPU"):
                         Gpu.Temperature = val;
                         break;
                     case SensorType.Clock when sensor.Name == "GPU Core":
@@ -249,22 +332,26 @@ public sealed class HardwareMonitorService : IDisposable
                         if (Gpu.FanPercent == 0 || val > 0)
                             Gpu.FanPercent = val;
                         break;
-                    case SensorType.SmallData when sensor.Name == "GPU Memory Used":
-                        Gpu.MemoryUsed = val;
+                    case SensorType.SmallData when sensor.Name.Contains("Memory Used"):
+                        if (val > Gpu.MemoryUsed) Gpu.MemoryUsed = val;
                         break;
-                    case SensorType.SmallData when sensor.Name == "GPU Memory Total":
-                        Gpu.MemoryTotal = val;
+                    case SensorType.SmallData when sensor.Name.Contains("Memory Total"):
+                        if (val > Gpu.MemoryTotal) Gpu.MemoryTotal = val;
                         break;
                     case SensorType.Load when sensor.Name == "GPU Memory":
                         Gpu.MemoryLoad = val;
                         break;
-                    case SensorType.Power when sensor.Name.Contains("GPU"):
+                    case SensorType.Power:
                         Gpu.Power = val;
                         break;
                 }
             }
-            break;
+
+            // If no "GPU Core" load, use the best D3D load as fallback
+            if (Gpu.CoreLoad == 0 && bestD3DLoad > 0)
+                Gpu.CoreLoad = bestD3DLoad;
         }
+        catch { /* sensor read failed during update */ }
     }
 
     private void UpdateRam()
