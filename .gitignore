@@ -1,0 +1,42 @@
+## .NET / Visual Studio
+bin/
+obj/
+dist/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## IDE
+.idea/
+*.swp
+*~
+.vscode/
+.cursor/
+
+## OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## Logs and diagnostics
+*.log
+sensors.log
