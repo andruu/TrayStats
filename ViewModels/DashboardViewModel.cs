@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,12 +18,12 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly WeatherService _weatherService;
     private readonly Dispatcher _dispatcher;
 
-    // Sparkline data
-    public ObservableCollection<double> CpuValues { get; } = new();
-    public ObservableCollection<double> GpuValues { get; } = new();
-    public ObservableCollection<double> RamValues { get; } = new();
-    public ObservableCollection<double> NetDownValues { get; } = new();
-    public ObservableCollection<double> NetUpValues { get; } = new();
+    // Sparkline data (List instead of ObservableCollection to avoid double-fire on RemoveAt+Add)
+    public List<double> CpuValues { get; } = new();
+    public List<double> GpuValues { get; } = new();
+    public List<double> RamValues { get; } = new();
+    public List<double> NetDownValues { get; } = new();
+    public List<double> NetUpValues { get; } = new();
 
     // Expose model objects
     public CpuData Cpu => _hwService.Cpu;
@@ -93,6 +92,8 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(Cpu));
             OnPropertyChanged(nameof(Gpu));
             OnPropertyChanged(nameof(Ram));
+
+            InvalidateCharts?.Invoke();
         });
     }
 
@@ -105,6 +106,8 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 
             NetSummary = $"{Net.DownloadFormatted} / {Net.UploadFormatted}";
             OnPropertyChanged(nameof(Net));
+
+            InvalidateCharts?.Invoke();
         });
     }
 
@@ -117,7 +120,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         });
     }
 
-    private static void PushValue(ObservableCollection<double> values, double newValue)
+    public event Action? InvalidateCharts;
+
+    private static void PushValue(List<double> values, double newValue)
     {
         if (values.Count >= MaxDataPoints)
             values.RemoveAt(0);

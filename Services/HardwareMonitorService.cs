@@ -13,6 +13,8 @@ public sealed class HardwareMonitorService : IDisposable
     private readonly System.Timers.Timer _timer;
     private readonly UpdateVisitor _visitor = new();
     private bool _needsCpuFallback;
+    private int _isUpdating;
+    private int _tickCount;
 
     public CpuData Cpu { get; } = new();
     public GpuData Gpu { get; } = new();
@@ -87,13 +89,20 @@ public sealed class HardwareMonitorService : IDisposable
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
+        if (Interlocked.CompareExchange(ref _isUpdating, 1, 0) != 0)
+            return;
+
         try
         {
             try { _computer.Accept(_visitor); }
             catch { /* hardware topology changed, continue with stale data */ }
 
             UpdateCpu();
-            if (_needsCpuFallback) UpdateCpuFallback();
+
+            var tick = Interlocked.Increment(ref _tickCount);
+            if (_needsCpuFallback && tick % 5 == 0)
+                UpdateCpuFallback();
+
             UpdateGpu();
             UpdateRam();
             DataUpdated?.Invoke();
@@ -101,6 +110,10 @@ public sealed class HardwareMonitorService : IDisposable
         catch
         {
             // Swallow sensor read errors
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isUpdating, 0);
         }
     }
 

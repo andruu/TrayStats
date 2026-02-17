@@ -27,8 +27,35 @@
                       HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
             <!-- Header -->
-            <TextBlock Text="TrayStats" FontSize="11" Foreground="#80FFFFFF"
-                       FontWeight="SemiBold" Margin="4,2,4,6" />
+            <Grid Margin="4,2,4,6">
+                <TextBlock Text="TrayStats" FontSize="11" Foreground="#80FFFFFF"
+                           FontWeight="SemiBold"/>
+                <Button Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="Transparent" Foreground="#80FFFFFF" BorderThickness="0"
+                        Cursor="Hand" Padding="4,2" Click="CloseButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#40FFFFFF"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
 
             <!-- ==================== Weather Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
@@ -138,7 +165,7 @@
                             <TextBlock Text="{Binding CpuSummary}" Style="{StaticResource MetricValueStyle}"/>
                         </StackPanel>
 
-                        <comp:SparklineChart Grid.Column="1" Height="40" Margin="4,0"
+                        <comp:SparklineChart x:Name="CpuChart" Grid.Column="1" Height="40" Margin="4,0"
                             Values="{Binding CpuValues}"
                             StrokeColor="#FF4CAF50" MinValue="0" MaxValue="100"/>
 
@@ -224,7 +251,7 @@
                             <TextBlock Text="{Binding GpuSummary}" Style="{StaticResource MetricValueStyle}"/>
                         </StackPanel>
 
-                        <comp:SparklineChart Grid.Column="1" Height="40" Margin="4,0"
+                        <comp:SparklineChart x:Name="GpuChart" Grid.Column="1" Height="40" Margin="4,0"
                             Values="{Binding GpuValues}"
                             StrokeColor="#FF00BFFF" MinValue="0" MaxValue="100"/>
 
@@ -300,7 +327,7 @@
                             <TextBlock Text="{Binding RamSummary}" Style="{StaticResource MetricValueStyle}"/>
                         </StackPanel>
 
-                        <comp:SparklineChart Grid.Column="1" Height="40" Margin="4,0"
+                        <comp:SparklineChart x:Name="RamChart" Grid.Column="1" Height="40" Margin="4,0"
                             Values="{Binding RamValues}"
                             StrokeColor="#FF9C27B0" MinValue="0" MaxValue="100"/>
 
@@ -479,10 +506,10 @@
 
                         <!-- Dual sparklines: download (green) and upload (red) overlaid -->
                         <Grid Grid.Column="1" Height="40" Margin="4,0">
-                            <comp:SparklineChart
+                            <comp:SparklineChart x:Name="NetDownChart"
                                 Values="{Binding NetDownValues}"
                                 StrokeColor="#FF4CAF50" AutoScale="True"/>
-                            <comp:SparklineChart
+                            <comp:SparklineChart x:Name="NetUpChart"
                                 Values="{Binding NetUpValues}"
                                 StrokeColor="#FFFF5722" AutoScale="True"/>
                         </Grid>

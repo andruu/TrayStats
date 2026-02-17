@@ -12,6 +12,25 @@ public partial class DashboardPopup : Window
     {
         InitializeComponent();
         SizeChanged += OnSizeChanged;
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is DashboardViewModel oldVm)
+            oldVm.InvalidateCharts -= OnInvalidateCharts;
+
+        if (e.NewValue is DashboardViewModel newVm)
+            newVm.InvalidateCharts += OnInvalidateCharts;
+    }
+
+    private void OnInvalidateCharts()
+    {
+        CpuChart.InvalidateValues();
+        GpuChart.InvalidateValues();
+        RamChart.InvalidateValues();
+        NetDownChart.InvalidateValues();
+        NetUpChart.InvalidateValues();
     }
 
     public void ShowAtTray()
@@ -87,5 +106,10 @@ public partial class DashboardPopup : Window
     private void NetRow_Click(object sender, MouseButtonEventArgs e)
     {
         ViewModel?.ToggleNetDetailCommand.Execute(null);
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Hide();
     }
 }

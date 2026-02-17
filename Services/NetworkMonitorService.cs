@@ -12,6 +12,7 @@ public sealed class NetworkMonitorService : IDisposable
     private long _sessionStartReceived;
     private long _sessionStartSent;
     private bool _initialized;
+    private int _isUpdating;
 
     public NetData Data { get; } = new();
     public event Action? DataUpdated;
@@ -44,6 +45,9 @@ public sealed class NetworkMonitorService : IDisposable
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
+        if (Interlocked.CompareExchange(ref _isUpdating, 1, 0) != 0)
+            return;
+
         try
         {
             if (!_initialized) return;
@@ -69,6 +73,10 @@ public sealed class NetworkMonitorService : IDisposable
         catch
         {
             // Swallow network read errors
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isUpdating, 0);
         }
     }
 

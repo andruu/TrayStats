@@ -4,20 +4,28 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace TrayStats.Views.Components;
 
 /// <summary>
 /// Lightweight sparkline chart drawn with WPF Polyline.
-/// Bind Values to an ObservableCollection of double and it auto-updates.
+/// Bind Values to a List of double and call InvalidateValues() to trigger a redraw,
+/// or bind to an ObservableCollection for automatic updates.
 /// </summary>
 public class SparklineChart : Canvas
 {
     private readonly Polyline _line;
     private readonly Polygon _fill;
+    private bool _redrawPending;
+    private Brush? _cachedFillBrush;
+    private Brush? _lastStrokeForFill;
+    private Brush? _lastExplicitFill;
+    private PointCollection _linePoints = new();
+    private PointCollection _fillPoints = new();
 
     public static readonly DependencyProperty ValuesProperty =
-        DependencyProperty.Register(nameof(Values), typeof(ObservableCollection<double>), typeof(SparklineChart),
+        DependencyProperty.Register(nameof(Values), typeof(IList<double>), typeof(SparklineChart),
             new PropertyMetadata(null, OnValuesChanged));
 
     public static readonly DependencyProperty StrokeColorProperty =
@@ -44,11 +52,13 @@ public class SparklineChart : Canvas
         DependencyProperty.Register(nameof(AutoScale), typeof(bool), typeof(SparklineChart),
             new PropertyMetadata(false, OnDataChanged));
 
-    public ObservableCollection<double>? Values
+    public IList<double>? Values
     {
-        get => (ObservableCollection<double>?)GetValue(ValuesProperty);
+        get => (IList<double>?)GetValue(ValuesProperty);
         set => SetValue(ValuesProperty, value);
     }
+
+    public void InvalidateValues() => ScheduleRedraw();
 
     public Brush StrokeColor
     {
@@ -105,50 +115,72 @@ public class SparklineChart : Canvas
         Children.Add(_fill);
         Children.Add(_line);
 
-        SizeChanged += (_, _) => Redraw();
+        SizeChanged += (_, _) => ScheduleRedraw();
     }
 
     private static void OnValuesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var chart = (SparklineChart)d;
 
-        if (e.OldValue is ObservableCollection<double> oldColl)
+        if (e.OldValue is INotifyCollectionChanged oldColl)
             oldColl.CollectionChanged -= chart.OnCollectionChanged;
 
-        if (e.NewValue is ObservableCollection<double> newColl)
+        if (e.NewValue is INotifyCollectionChanged newColl)
             newColl.CollectionChanged += chart.OnCollectionChanged;
 
-        chart.Redraw();
+        chart.ScheduleRedraw();
     }
 
     private static void OnAppearanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        ((SparklineChart)d).Redraw();
+        var chart = (SparklineChart)d;
+        chart._cachedFillBrush = null;
+        chart.ScheduleRedraw();
     }
 
     private static void OnDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        ((SparklineChart)d).Redraw();
+        ((SparklineChart)d).ScheduleRedraw();
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        Redraw();
+        ScheduleRedraw();
+    }
+
+    private void ScheduleRedraw()
+    {
+        if (_redrawPending) return;
+        _redrawPending = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Render, Redraw);
     }
 
     private void Redraw()
     {
+        _redrawPending = false;
+
         _line.Stroke = StrokeColor;
         _line.StrokeThickness = StrokeThicknessValue;
 
-        if (FillColor != null)
-            _fill.Fill = FillColor;
+        var explicitFill = FillColor;
+        if (explicitFill != null)
+        {
+            _fill.Fill = explicitFill;
+        }
         else
         {
-            if (StrokeColor is SolidColorBrush scb)
-                _fill.Fill = new SolidColorBrush(Color.FromArgb(40, scb.Color.R, scb.Color.G, scb.Color.B));
-            else
-                _fill.Fill = new SolidColorBrush(Color.FromArgb(40, 128, 255, 128));
+            if (_cachedFillBrush == null || _lastStrokeForFill != StrokeColor || _lastExplicitFill != explicitFill)
+            {
+                if (StrokeColor is SolidColorBrush scb)
+                    _cachedFillBrush = new SolidColorBrush(Color.FromArgb(40, scb.Color.R, scb.Color.G, scb.Color.B));
+                else
+                    _cachedFillBrush = new SolidColorBrush(Color.FromArgb(40, 128, 255, 128));
+
+                _cachedFillBrush.Freeze();
+                _lastStrokeForFill = StrokeColor;
+                _lastExplicitFill = explicitFill;
+            }
+            _fill.Fill = _cachedFillBrush;
         }
 
         var values = Values;
@@ -157,8 +189,10 @@ public class SparklineChart : Canvas
 
         if (values == null || values.Count < 2 || w <= 0 || h <= 0)
         {
-            _line.Points.Clear();
-            _fill.Points.Clear();
+            _linePoints.Clear();
+            _fillPoints.Clear();
+            _line.Points = _linePoints;
+            _fill.Points = _fillPoints;
             return;
         }
 
@@ -185,8 +219,8 @@ public class SparklineChart : Canvas
         int count = values.Count;
         double step = w / (count - 1);
 
-        var linePoints = new PointCollection(count);
-        var fillPoints = new PointCollection(count + 2);
+        _linePoints = new PointCollection(count);
+        _fillPoints = new PointCollection(count + 2);
 
         for (int i = 0; i < count; i++)
         {
@@ -196,14 +230,14 @@ public class SparklineChart : Canvas
             y = Math.Max(0, Math.Min(h, y));
 
             var pt = new Point(x, y);
-            linePoints.Add(pt);
-            fillPoints.Add(pt);
+            _linePoints.Add(pt);
+            _fillPoints.Add(pt);
         }
 
-        fillPoints.Add(new Point(w, h));
-        fillPoints.Add(new Point(0, h));
+        _fillPoints.Add(new Point(w, h));
+        _fillPoints.Add(new Point(0, h));
 
-        _line.Points = linePoints;
-        _fill.Points = fillPoints;
+        _line.Points = _linePoints;
+        _fill.Points = _fillPoints;
     }
 }
