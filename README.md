@@ -8,7 +8,7 @@
   <b>Real-time system monitoring in your tray.</b>
 </p>
 
-TrayStats is a lightweight Windows app that puts live CPU, GPU, RAM, disk, and network stats in your system tray. It shows a dynamic live-updating icon and pops up a rich dashboard when clicked -- no need to open Task Manager just to see how your system is doing.
+TrayStats is a lightweight Windows app that puts live CPU, GPU, RAM, disk, network, battery, and more in your system tray. It shows a dynamic live-updating icon and pops up a rich dashboard when clicked -- no need to open Task Manager just to see how your system is doing.
 
 This project was vibecoded by a developer who missed having quick system stats without opening Task Manager every five seconds.
 
@@ -21,14 +21,19 @@ This project was vibecoded by a developer who missed having quick system stats w
 - [Usage](#usage)
 - [Dashboard](#dashboard)
   - [Weather](#weather)
+  - [Top Processes](#top-processes)
   - [CPU](#cpu)
   - [GPU](#gpu)
   - [RAM](#ram)
   - [Disk](#disk)
+  - [Battery](#battery)
+  - [Bluetooth / Peripherals](#bluetooth--peripherals)
   - [Network](#network)
+  - [System Uptime](#system-uptime)
 - [Tray Icon Options](#tray-icon-options)
   - [Tray Metric](#tray-metric)
   - [Icon Style](#icon-style)
+- [Section Visibility](#section-visibility)
 - [Running as Admin](#running-as-admin)
 - [Architecture](#architecture)
 - [Known Limitations](#known-limitations)
@@ -45,12 +50,18 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **Multiple icon styles** | Bar, percentage text, or mini chart -- pick your preference |
 | **Pop-up dashboard** | Click the tray icon to see a compact dashboard with sparkline charts and detailed stats |
 | **CPU monitoring** | Total load, per-core usage bars, temperature, max clock, package power |
-| **GPU monitoring** | Core load, temperature, core/memory clocks, VRAM usage, fan speed, power draw |
+| **GPU monitoring** | Core load, temperature, core/memory clocks, VRAM usage, fan speed, power draw. Auto-detects active GPU on multi-GPU systems |
 | **RAM monitoring** | Used / available / total memory, load percentage |
 | **Disk monitoring** | Per-drive space usage, temperature, read/write speeds |
+| **Battery monitoring** | Charge level, charge/discharge rate, voltage, time remaining, health, design/full charge capacity. Sparkline and charge bar turn green when plugged in |
 | **Network monitoring** | Real-time download/upload speeds with sparkline history |
+| **Top Processes** | Top 5 CPU-consuming processes with CPU and memory usage |
+| **Bluetooth / Peripherals** | Connected and paired Bluetooth devices with device type icons and connection status |
+| **System Uptime** | Time since last boot, OS version, machine name, user name |
 | **Weather** | Current conditions and 3-day forecast via Open-Meteo (no API key needed) |
+| **Section visibility** | Choose which sections appear on the dashboard via the right-click menu |
 | **Expandable detail panels** | Click any section header to expand/collapse detailed stats |
+| **Close button** | Close the dashboard without quitting the app |
 | **Start with Windows** | Optional auto-start via the context menu |
 | **Restart as Admin** | Elevate to get full sensor access without relaunching manually |
 | **Single instance** | Mutex-based enforcement prevents duplicate instances |
@@ -86,6 +97,7 @@ dotnet run
    - **Show Dashboard** -- open the popup
    - **Tray Metric** -- choose what the icon displays (CPU, GPU, or RAM)
    - **Icon Style** -- choose how the icon looks (Bar, Percentage, or Mini Chart)
+   - **Sections** -- toggle which sections are visible on the dashboard
    - **Restart as Admin** -- relaunch with elevated privileges for full sensor data
    - **Start with Windows** -- toggle auto-start at login
    - **Exit** -- quit the app
@@ -96,7 +108,7 @@ dotnet run
 
 ## Dashboard
 
-The dashboard is a dark-themed popup window that anchors near your system tray. Each section shows a sparkline chart with 60 data points of history and a summary. Click the arrow on any section to expand its detail panel.
+The dashboard is a dark-themed popup window that anchors near your system tray. Each section shows a sparkline chart with 60 data points of history and a summary. Click the arrow on any section to expand its detail panel. Use the close button (top-right) to dismiss the dashboard without quitting the app.
 
 ### Weather
 
@@ -110,6 +122,15 @@ The dashboard is a dark-themed popup window that anchors near your system tray. 
 | **3-Day Forecast** | High/low temps, condition icon, and precipitation probability for the next 3 days |
 
 Location is auto-detected via IP geolocation. Weather updates every 15 minutes using the free [Open-Meteo](https://open-meteo.com/) API (no API key required).
+
+### Top Processes
+
+| Stat | Description |
+|---|---|
+| **Top Consumer** | Name of the process using the most CPU |
+| **Process List** | Top 5 processes ranked by CPU usage, showing CPU % and memory in MB |
+
+Updates every 3 seconds. Processes are grouped by name (e.g., multiple Chrome instances are combined).
 
 ### CPU
 
@@ -133,13 +154,15 @@ Location is auto-detected via IP geolocation. Weather updates every 15 minutes u
 | **Fan Speed** | Fan RPM (may show N/A if fans are stopped at idle) |
 | **Power** | GPU power draw |
 
+On systems with multiple GPUs (integrated + discrete), TrayStats automatically detects the active GPU based on D3D usage and switches accordingly.
+
 ### RAM
 
 | Stat | Description |
 |---|---|
 | **Used / Total** | Physical memory usage in GB |
 | **Available** | Free physical memory |
-| **Load** | Memory utilization percentage |
+| **Load** | Memory utilization percentage with proportional usage bar |
 
 ### Disk
 
@@ -149,6 +172,31 @@ Location is auto-detected via IP geolocation. Weather updates every 15 minutes u
 | **Total / Used / Free** | Drive capacity breakdown |
 | **Temperature** | Drive temperature (requires admin on some systems) |
 
+### Battery
+
+| Stat | Description |
+|---|---|
+| **Charge Level** | Current battery percentage with sparkline history |
+| **Charge Bar** | Full-width proportional bar (green when plugged in, amber on battery) |
+| **Status** | Charging, Discharging, or Full |
+| **Time Remaining** | Estimated time to full charge or time remaining on battery |
+| **Rate** | Charge/discharge rate in watts |
+| **Voltage** | Current battery voltage |
+| **Health** | Battery health percentage (current capacity vs design capacity) |
+| **Design Capacity** | Original battery capacity in mWh |
+| **Full Charge** | Current full charge capacity in mWh |
+
+The battery section only appears on devices with a battery. The sparkline chart and charge bar turn green when the device is plugged in.
+
+### Bluetooth / Peripherals
+
+| Stat | Description |
+|---|---|
+| **Connected Count** | Number of actively connected Bluetooth devices |
+| **Device List** | All paired and connected devices with type icon, name, and connection status |
+
+Device types are auto-classified (headphones, mouse, keyboard, gamepad, etc.) with appropriate icons. Uses Windows WinRT Bluetooth APIs for accurate real-time connection status. Updates every 15 seconds.
+
 ### Network
 
 | Stat | Description |
@@ -156,6 +204,18 @@ Location is auto-detected via IP geolocation. Weather updates every 15 minutes u
 | **Download speed** | Current download rate |
 | **Upload speed** | Current upload rate |
 | **Sparkline charts** | Separate download/upload history graphs |
+
+### System Uptime
+
+| Stat | Description |
+|---|---|
+| **Uptime** | Time since last system boot (e.g., "2d 5h 30m") |
+| **OS Version** | Windows version string |
+| **Machine Name** | Computer name |
+| **User** | Current logged-in user |
+| **Boot Time** | Date and time of last system boot |
+
+Updates every 60 seconds.
 
 ---
 
@@ -185,6 +245,23 @@ All styles use color coding: **green** (< 60%), **yellow** (60-85%), **red** (> 
 
 ---
 
+## Section Visibility
+
+Right-click the tray icon and open the **Sections** submenu to toggle which sections appear on the dashboard. All sections are enabled by default. Available toggles:
+
+- Weather
+- Top Processes
+- CPU
+- GPU
+- RAM
+- Disk
+- Battery
+- Bluetooth
+- Network
+- System Uptime
+
+---
+
 ## Running as Admin
 
 Some hardware sensors (CPU temperature, disk temperature, GPU fan speed) require administrator privileges to read. Without admin:
@@ -206,10 +283,11 @@ The app seamlessly restarts itself with elevated privileges. Your dashboard stat
 
 ## Architecture
 
+TrayStats follows SOLID principles with dedicated monitor services per hardware type and a shared hardware context.
+
 ```
 TrayStats/
   App.xaml / App.xaml.cs         Entry point, tray icon, context menu, single-instance mutex
-  app.manifest                   UAC execution level configuration
 
   Models/
     CpuData.cs                   CPU model (total load, per-core, temp, clock, power)
@@ -217,13 +295,26 @@ TrayStats/
     RamData.cs                   RAM model (used, available, total, load)
     DiskData.cs                  Disk model (drive info, temp, read/write rates)
     NetData.cs                   Network model (download/upload speeds, formatters)
+    BatteryData.cs               Battery model (charge, rate, voltage, health, capacity)
     WeatherData.cs               Weather model (current conditions, forecast, WMO code mapper)
+    ProcessData.cs               Process model (top CPU consumers, memory usage)
+    BluetoothData.cs             Bluetooth model (device list, connection status)
+    UptimeData.cs                Uptime model (uptime, OS, machine, user, boot time)
+    SectionVisibility.cs         Observable toggles for dashboard section visibility
 
   Services/
-    HardwareMonitorService.cs    LibreHardwareMonitor wrapper + WMI fallbacks for CPU/GPU/RAM
-    NetworkMonitorService.cs     Network bandwidth via System.Net.NetworkInformation
+    IMonitorService.cs           Common interface for all monitor services
+    HardwareContext.cs            Shared LibreHardwareMonitor Computer instance and update loop
+    CpuMonitorService.cs         CPU monitoring + WMI fallback
+    GpuMonitorService.cs         GPU monitoring + multi-GPU detection + D3D fallback
+    RamMonitorService.cs         RAM monitoring via P/Invoke GlobalMemoryStatusEx
+    BatteryMonitorService.cs     Battery monitoring via LHM + GetSystemPowerStatus P/Invoke
     DiskMonitorService.cs        Disk space via System.IO.DriveInfo + LHM for temps
+    NetworkMonitorService.cs     Network bandwidth via System.Net.NetworkInformation
     WeatherService.cs            Open-Meteo API + IP geolocation for weather data
+    ProcessMonitorService.cs     Top process tracking via System.Diagnostics.Process
+    BluetoothMonitorService.cs   Bluetooth devices via WinRT Windows.Devices.Bluetooth APIs
+    UptimeMonitorService.cs      System uptime via Environment.TickCount64
 
   ViewModels/
     DashboardViewModel.cs        MVVM ViewModel, sparkline data, relay commands
@@ -243,25 +334,34 @@ TrayStats/
 
 | Library | Purpose |
 |---|---|
-| [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | CPU/GPU temps, clocks, fan speeds, power, disk health |
+| [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | CPU/GPU temps, clocks, fan speeds, power, disk health, battery sensors |
 | [H.NotifyIcon.Wpf](https://github.com/HavenDV/H.NotifyIcon) | Modern system tray icon for WPF |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MVVM base classes, ObservableObject, RelayCommand |
 | System.Management | WMI queries as fallback for unsupported hardware |
+| Windows.Devices.Bluetooth | WinRT APIs for accurate Bluetooth connection status |
 | [Open-Meteo API](https://open-meteo.com/) | Free weather data (no API key), current conditions + forecast |
 
 ### Data Flow
 
 ```
-Hardware Sensors (1s polling interval)
+Hardware Sensors (1s polling via HardwareContext)
     |
     v
-HardwareMonitorService / NetworkMonitorService / DiskMonitorService
+Per-hardware Monitor Services (CPU, GPU, RAM, Battery, Disk, etc.)
     |
     v
-DashboardViewModel (ObservableCollections, data binding)
+DashboardViewModel (ObservableProperties, data binding, UI-thread dispatch)
     |
     +---> DashboardPopup (WPF UI, sparklines, detail panels)
     +---> App.xaml.cs (tray icon update every 2s)
+
+Independent Services (own timers):
+    WeatherService          15 min interval
+    ProcessMonitorService   3s interval
+    BluetoothMonitorService 15s interval
+    UptimeMonitorService    60s interval
+    NetworkMonitorService   1s interval
+    DiskMonitorService      follows HardwareContext tick (every 5th)
 ```
 
 ---
@@ -274,7 +374,7 @@ DashboardViewModel (ObservableCollections, data binding)
 | **Laptop GPU fans** | Modern NVIDIA laptop GPUs stop fans at idle. Fan speed showing 0 RPM / N/A at low temps is expected behavior |
 | **Admin required for full data** | Some sensors need elevated privileges. Use "Restart as Admin" from the tray menu |
 | **Single monitor positioning** | The dashboard popup positions relative to the primary taskbar. Multi-monitor setups with taskbars on secondary displays may need manual adjustment |
-| **No GPU selection** | On systems with multiple GPUs (e.g., integrated + discrete), the first detected GPU is shown |
+| **Bluetooth scan interval** | Bluetooth device status updates every 15 seconds; very brief connections may be missed between scans |
 
 ---
 
@@ -282,7 +382,7 @@ DashboardViewModel (ObservableCollections, data binding)
 
 ### Prerequisites
 
-- Windows 10/11
+- Windows 10 (19041+) / Windows 11
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 ### Build
@@ -301,25 +401,10 @@ dotnet run
 ### Publish Self-Contained
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist
+dotnet publish -c Release -r win-x64 --self-contained -o dist
 ```
 
-This produces a single-file executable in `./dist/` that includes the .NET runtime. No .NET installation required on the target machine.
-
-### Project Structure
-
-```
-TrayStats/
-  TrayStats.csproj       Project file (.NET 8, WPF)
-  App.xaml(.cs)           Application entry point
-  app.manifest            UAC manifest
-  Models/                 Data models (MVVM ObservableObjects)
-  Services/               Hardware monitoring services
-  ViewModels/             Dashboard ViewModel
-  Views/                  WPF views and custom controls
-  Helpers/                Icon generation, converters, startup
-  README.md
-```
+This produces a self-contained build in `./dist/` that includes the .NET runtime. No .NET installation required on the target machine.
 
 ---
 
