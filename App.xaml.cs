@@ -39,7 +39,7 @@ public partial class App : Application
         // Dump all sensors to a log file for diagnostics
         try
         {
-            var dump = _viewModel.HardwareService.DumpAllSensors();
+            var dump = _viewModel.HardwareContext.DumpAllSensors();
             var logPath = System.IO.Path.Combine(AppContext.BaseDirectory, "sensors.log");
             System.IO.File.WriteAllText(logPath, dump);
         }
@@ -101,6 +101,17 @@ public partial class App : Application
         styleMenu.Items.Add(pctItem);
         styleMenu.Items.Add(chartItem);
         contextMenu.Items.Add(styleMenu);
+
+        // Sections submenu
+        var sectionsMenu = new MenuItem { Header = "Sections" };
+        AddSectionToggle(sectionsMenu, "Weather", () => _viewModel!.Sections.ShowWeather, v => _viewModel!.Sections.ShowWeather = v);
+        AddSectionToggle(sectionsMenu, "CPU", () => _viewModel!.Sections.ShowCpu, v => _viewModel!.Sections.ShowCpu = v);
+        AddSectionToggle(sectionsMenu, "GPU", () => _viewModel!.Sections.ShowGpu, v => _viewModel!.Sections.ShowGpu = v);
+        AddSectionToggle(sectionsMenu, "RAM", () => _viewModel!.Sections.ShowRam, v => _viewModel!.Sections.ShowRam = v);
+        AddSectionToggle(sectionsMenu, "Disk", () => _viewModel!.Sections.ShowDisk, v => _viewModel!.Sections.ShowDisk = v);
+        AddSectionToggle(sectionsMenu, "Battery", () => _viewModel!.Sections.ShowBattery, v => _viewModel!.Sections.ShowBattery = v);
+        AddSectionToggle(sectionsMenu, "Network", () => _viewModel!.Sections.ShowNet, v => _viewModel!.Sections.ShowNet = v);
+        contextMenu.Items.Add(sectionsMenu);
 
         contextMenu.Items.Add(new Separator());
 
@@ -168,6 +179,18 @@ public partial class App : Application
             _ => items[2]
         };
         selected.IsChecked = true;
+    }
+
+    private static void AddSectionToggle(MenuItem parent, string label, Func<bool> getter, Action<bool> setter)
+    {
+        var item = new MenuItem
+        {
+            Header = label,
+            IsCheckable = true,
+            IsChecked = getter()
+        };
+        item.Click += (_, _) => setter(item.IsChecked);
+        parent.Items.Add(item);
     }
 
     private void TogglePopup()

@@ -11,14 +11,19 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 {
     private const int MaxDataPoints = 60;
 
-    private readonly HardwareMonitorService _hwService;
-    public HardwareMonitorService HardwareService => _hwService;
+    private readonly HardwareContext _hwContext;
+    private readonly CpuMonitorService _cpuService;
+    private readonly GpuMonitorService _gpuService;
+    private readonly RamMonitorService _ramService;
+    private readonly BatteryMonitorService _batteryService;
     private readonly NetworkMonitorService _netService;
     private readonly DiskMonitorService _diskService;
     private readonly WeatherService _weatherService;
     private readonly Dispatcher _dispatcher;
 
-    // Sparkline data (List instead of ObservableCollection to avoid double-fire on RemoveAt+Add)
+    public HardwareContext HardwareContext => _hwContext;
+
+    // Sparkline data
     public List<double> CpuValues { get; } = new();
     public List<double> GpuValues { get; } = new();
     public List<double> RamValues { get; } = new();
@@ -27,13 +32,16 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public List<double> BatteryValues { get; } = new();
 
     // Expose model objects
-    public CpuData Cpu => _hwService.Cpu;
-    public GpuData Gpu => _hwService.Gpu;
-    public RamData Ram => _hwService.Ram;
+    public CpuData Cpu => _cpuService.Data;
+    public GpuData Gpu => _gpuService.Data;
+    public RamData Ram => _ramService.Data;
+    public BatteryData Battery => _batteryService.Data;
     public NetData Net => _netService.Data;
     public DiskData Disk => _diskService.Data;
     public WeatherData Weather => _weatherService.Data;
-    public BatteryData Battery => _hwService.Battery;
+
+    // Section visibility
+    public SectionVisibility Sections { get; } = new();
 
     // Detail panel visibility
     [ObservableProperty] private bool _isWeatherDetailVisible;
@@ -56,9 +64,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     {
         _dispatcher = Application.Current.Dispatcher;
 
-        _hwService = new HardwareMonitorService();
+        _hwContext = new HardwareContext();
+        _cpuService = new CpuMonitorService(_hwContext);
+        _gpuService = new GpuMonitorService(_hwContext);
+        _ramService = new RamMonitorService(_hwContext);
+        _batteryService = new BatteryMonitorService(_hwContext);
         _netService = new NetworkMonitorService();
-        _diskService = new DiskMonitorService(_hwService);
+        _diskService = new DiskMonitorService(_hwContext);
         _weatherService = new WeatherService();
 
         for (int i = 0; i < MaxDataPoints; i++)
@@ -71,40 +83,64 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             BatteryValues.Add(0);
         }
 
-        _hwService.DataUpdated += OnHardwareUpdated;
+        _cpuService.DataUpdated += OnCpuUpdated;
+        _gpuService.DataUpdated += OnGpuUpdated;
+        _ramService.DataUpdated += OnRamUpdated;
+        _batteryService.DataUpdated += OnBatteryUpdated;
         _netService.DataUpdated += OnNetworkUpdated;
         _diskService.DataUpdated += OnDiskUpdated;
         _weatherService.DataUpdated += OnWeatherUpdated;
 
-        _hwService.Start();
+        _hwContext.Start();
+        _cpuService.Start();
+        _gpuService.Start();
+        _ramService.Start();
+        _batteryService.Start();
         _netService.Start();
         _diskService.Start();
         _weatherService.Start();
     }
 
-    private void OnHardwareUpdated()
+    private void OnCpuUpdated()
     {
         _dispatcher.BeginInvoke(() =>
         {
             PushValue(CpuValues, Cpu.TotalLoad);
-            PushValue(GpuValues, Gpu.CoreLoad);
-            PushValue(RamValues, Ram.Load);
-
             CpuSummary = $"{Cpu.TotalLoad:F0}%";
-            GpuSummary = $"{Gpu.CoreLoad:F0}%";
-            RamSummary = $"{Ram.UsedGb:F1} / {Ram.TotalGb:F1} GB";
-
-            if (Battery.HasBattery)
-            {
-                PushValue(BatteryValues, Battery.ChargeLevel);
-                BatterySummary = $"{Battery.ChargeLevel:F0}%";
-                OnPropertyChanged(nameof(Battery));
-            }
-
             OnPropertyChanged(nameof(Cpu));
-            OnPropertyChanged(nameof(Gpu));
-            OnPropertyChanged(nameof(Ram));
+            InvalidateCharts?.Invoke();
+        });
+    }
 
+    private void OnGpuUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            PushValue(GpuValues, Gpu.CoreLoad);
+            GpuSummary = $"{Gpu.CoreLoad:F0}%";
+            OnPropertyChanged(nameof(Gpu));
+            InvalidateCharts?.Invoke();
+        });
+    }
+
+    private void OnRamUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            PushValue(RamValues, Ram.Load);
+            RamSummary = $"{Ram.UsedGb:F1} / {Ram.TotalGb:F1} GB";
+            OnPropertyChanged(nameof(Ram));
+            InvalidateCharts?.Invoke();
+        });
+    }
+
+    private void OnBatteryUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            PushValue(BatteryValues, Battery.ChargeLevel);
+            BatterySummary = $"{Battery.ChargeLevel:F0}%";
+            OnPropertyChanged(nameof(Battery));
             InvalidateCharts?.Invoke();
         });
     }
@@ -115,10 +151,8 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         {
             PushValue(NetDownValues, Net.DownloadBytesPerSec / 1024.0);
             PushValue(NetUpValues, Net.UploadBytesPerSec / 1024.0);
-
             NetSummary = $"{Net.DownloadFormatted} / {Net.UploadFormatted}";
             OnPropertyChanged(nameof(Net));
-
             InvalidateCharts?.Invoke();
         });
     }
@@ -132,6 +166,14 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         });
     }
 
+    private void OnWeatherUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            OnPropertyChanged(nameof(Weather));
+        });
+    }
+
     public event Action? InvalidateCharts;
 
     private static void PushValue(List<double> values, double newValue)
@@ -139,14 +181,6 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         if (values.Count >= MaxDataPoints)
             values.RemoveAt(0);
         values.Add(newValue);
-    }
-
-    private void OnWeatherUpdated()
-    {
-        _dispatcher.BeginInvoke(() =>
-        {
-            OnPropertyChanged(nameof(Weather));
-        });
     }
 
     [RelayCommand]
@@ -172,14 +206,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        _hwService.DataUpdated -= OnHardwareUpdated;
-        _netService.DataUpdated -= OnNetworkUpdated;
-        _diskService.DataUpdated -= OnDiskUpdated;
-        _weatherService.DataUpdated -= OnWeatherUpdated;
-
-        _hwService.Dispose();
+        _cpuService.Dispose();
+        _gpuService.Dispose();
+        _ramService.Dispose();
+        _batteryService.Dispose();
         _netService.Dispose();
         _diskService.Dispose();
         _weatherService.Dispose();
+        _hwContext.Dispose();
     }
 }

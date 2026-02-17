@@ -4,7 +4,7 @@ using TrayStats.Models;
 
 namespace TrayStats.Services;
 
-public sealed class NetworkMonitorService : IDisposable
+public sealed class NetworkMonitorService : IMonitorService
 {
     private readonly System.Timers.Timer _timer;
     private long _previousBytesReceived;

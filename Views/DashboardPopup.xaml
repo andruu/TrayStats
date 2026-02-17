@@ -59,7 +59,8 @@
 
             <!-- ==================== Weather Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="WeatherRow_Click">
+                    MouseLeftButtonDown="WeatherRow_Click"
+                    Visibility="{Binding Sections.ShowWeather, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -151,7 +152,8 @@
 
             <!-- ==================== CPU Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="CpuRow_Click">
+                    MouseLeftButtonDown="CpuRow_Click"
+                    Visibility="{Binding Sections.ShowCpu, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -237,7 +239,8 @@
 
             <!-- ==================== GPU Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="GpuRow_Click">
+                    MouseLeftButtonDown="GpuRow_Click"
+                    Visibility="{Binding Sections.ShowGpu, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -313,7 +316,8 @@
 
             <!-- ==================== RAM Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="RamRow_Click">
+                    MouseLeftButtonDown="RamRow_Click"
+                    Visibility="{Binding Sections.ShowRam, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -383,7 +387,8 @@
 
             <!-- ==================== Disk Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="DiskRow_Click">
+                    MouseLeftButtonDown="DiskRow_Click"
+                    Visibility="{Binding Sections.ShowDisk, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -480,6 +485,7 @@
             </Border>
 
             <!-- ==================== Battery Row ==================== -->
+            <Border Visibility="{Binding Sections.ShowBattery, Converter={StaticResource BoolToVis}}">
             <Border Style="{StaticResource MetricRowStyle}"
                     MouseLeftButtonDown="BatteryRow_Click"
                     Visibility="{Binding Battery.HasBattery, Converter={StaticResource BoolToVis}}">
@@ -575,10 +581,12 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+            </Border>
 
             <!-- ==================== Network Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
-                    MouseLeftButtonDown="NetRow_Click">
+                    MouseLeftButtonDown="NetRow_Click"
+                    Visibility="{Binding Sections.ShowNet, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>

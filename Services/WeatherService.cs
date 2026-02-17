@@ -6,7 +6,7 @@ using TrayStats.Models;
 
 namespace TrayStats.Services;
 
-public sealed class WeatherService : IDisposable
+public sealed class WeatherService : IMonitorService
 {
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
 

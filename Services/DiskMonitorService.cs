@@ -4,17 +4,17 @@ using TrayStats.Models;
 
 namespace TrayStats.Services;
 
-public sealed class DiskMonitorService : IDisposable
+public sealed class DiskMonitorService : IMonitorService
 {
     private readonly System.Timers.Timer _timer;
-    private readonly HardwareMonitorService _hwService;
+    private readonly HardwareContext _hwContext;
 
     public DiskData Data { get; } = new();
     public event Action? DataUpdated;
 
-    public DiskMonitorService(HardwareMonitorService hwService)
+    public DiskMonitorService(HardwareContext hwContext)
     {
-        _hwService = hwService;
+        _hwContext = hwContext;
 
         _timer = new System.Timers.Timer(5000);
         _timer.Elapsed += OnTimerElapsed;
@@ -44,7 +44,7 @@ public sealed class DiskMonitorService : IDisposable
 
     private void Update()
     {
-        var storageHwData = _hwService.GetStorageData();
+        var storageHwData = _hwContext.GetStorageData();
         var drives = DriveInfo.GetDrives();
 
         Data.Drives.Clear();
