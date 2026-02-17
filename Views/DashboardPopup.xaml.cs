@@ -59,6 +59,11 @@ public partial class DashboardPopup : Window
         Hide();
     }
 
+    private void WeatherRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleWeatherDetailCommand.Execute(null);
+    }
+
     private void CpuRow_Click(object sender, MouseButtonEventArgs e)
     {
         ViewModel?.ToggleCpuDetailCommand.Execute(null);

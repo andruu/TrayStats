@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="TrayStats" width="128" height="128">
+  <img src="assets/screenshot.png" alt="TrayStats" width="350">
 </p>
 
 <h1 align="center">TrayStats</h1>
@@ -20,6 +20,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 - [Installation](#installation)
 - [Usage](#usage)
 - [Dashboard](#dashboard)
+  - [Weather](#weather)
   - [CPU](#cpu)
   - [GPU](#gpu)
   - [RAM](#ram)
@@ -48,6 +49,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **RAM monitoring** | Used / available / total memory, load percentage |
 | **Disk monitoring** | Per-drive space usage, temperature, read/write speeds |
 | **Network monitoring** | Real-time download/upload speeds with sparkline history |
+| **Weather** | Current conditions and 3-day forecast via Open-Meteo (no API key needed) |
 | **Expandable detail panels** | Click any section header to expand/collapse detailed stats |
 | **Start with Windows** | Optional auto-start via the context menu |
 | **Restart as Admin** | Elevate to get full sensor access without relaunching manually |
@@ -95,6 +97,19 @@ dotnet run
 ## Dashboard
 
 The dashboard is a dark-themed popup window that anchors near your system tray. Each section shows a sparkline chart with 60 data points of history and a summary. Click the arrow on any section to expand its detail panel.
+
+### Weather
+
+| Stat | Description |
+|---|---|
+| **Current Temp** | Current temperature at your location |
+| **Condition** | Weather condition (Clear, Cloudy, Rain, Snow, etc.) with icon |
+| **Feels Like** | Apparent temperature |
+| **Humidity** | Relative humidity percentage |
+| **Wind** | Wind speed in km/h |
+| **3-Day Forecast** | High/low temps, condition icon, and precipitation probability for the next 3 days |
+
+Location is auto-detected via IP geolocation. Weather updates every 15 minutes using the free [Open-Meteo](https://open-meteo.com/) API (no API key required).
 
 ### CPU
 
@@ -202,11 +217,13 @@ TrayStats/
     RamData.cs                   RAM model (used, available, total, load)
     DiskData.cs                  Disk model (drive info, temp, read/write rates)
     NetData.cs                   Network model (download/upload speeds, formatters)
+    WeatherData.cs               Weather model (current conditions, forecast, WMO code mapper)
 
   Services/
     HardwareMonitorService.cs    LibreHardwareMonitor wrapper + WMI fallbacks for CPU/GPU/RAM
     NetworkMonitorService.cs     Network bandwidth via System.Net.NetworkInformation
     DiskMonitorService.cs        Disk space via System.IO.DriveInfo + LHM for temps
+    WeatherService.cs            Open-Meteo API + IP geolocation for weather data
 
   ViewModels/
     DashboardViewModel.cs        MVVM ViewModel, sparkline data, relay commands
@@ -230,6 +247,7 @@ TrayStats/
 | [H.NotifyIcon.Wpf](https://github.com/HavenDV/H.NotifyIcon) | Modern system tray icon for WPF |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MVVM base classes, ObservableObject, RelayCommand |
 | System.Management | WMI queries as fallback for unsupported hardware |
+| [Open-Meteo API](https://open-meteo.com/) | Free weather data (no API key), current conditions + forecast |
 
 ### Data Flow
 

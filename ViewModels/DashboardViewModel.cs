@@ -16,6 +16,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public HardwareMonitorService HardwareService => _hwService;
     private readonly NetworkMonitorService _netService;
     private readonly DiskMonitorService _diskService;
+    private readonly WeatherService _weatherService;
     private readonly Dispatcher _dispatcher;
 
     // Sparkline data
@@ -31,8 +32,10 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public RamData Ram => _hwService.Ram;
     public NetData Net => _netService.Data;
     public DiskData Disk => _diskService.Data;
+    public WeatherData Weather => _weatherService.Data;
 
     // Detail panel visibility
+    [ObservableProperty] private bool _isWeatherDetailVisible;
     [ObservableProperty] private bool _isCpuDetailVisible;
     [ObservableProperty] private bool _isGpuDetailVisible;
     [ObservableProperty] private bool _isRamDetailVisible;
@@ -53,6 +56,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _hwService = new HardwareMonitorService();
         _netService = new NetworkMonitorService();
         _diskService = new DiskMonitorService(_hwService);
+        _weatherService = new WeatherService();
 
         for (int i = 0; i < MaxDataPoints; i++)
         {
@@ -66,10 +70,12 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _hwService.DataUpdated += OnHardwareUpdated;
         _netService.DataUpdated += OnNetworkUpdated;
         _diskService.DataUpdated += OnDiskUpdated;
+        _weatherService.DataUpdated += OnWeatherUpdated;
 
         _hwService.Start();
         _netService.Start();
         _diskService.Start();
+        _weatherService.Start();
     }
 
     private void OnHardwareUpdated()
@@ -118,6 +124,17 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         values.Add(newValue);
     }
 
+    private void OnWeatherUpdated()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            OnPropertyChanged(nameof(Weather));
+        });
+    }
+
+    [RelayCommand]
+    private void ToggleWeatherDetail() => IsWeatherDetailVisible = !IsWeatherDetailVisible;
+
     [RelayCommand]
     private void ToggleCpuDetail() => IsCpuDetailVisible = !IsCpuDetailVisible;
 
@@ -138,9 +155,11 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _hwService.DataUpdated -= OnHardwareUpdated;
         _netService.DataUpdated -= OnNetworkUpdated;
         _diskService.DataUpdated -= OnDiskUpdated;
+        _weatherService.DataUpdated -= OnWeatherUpdated;
 
         _hwService.Dispose();
         _netService.Dispose();
         _diskService.Dispose();
+        _weatherService.Dispose();
     }
 }

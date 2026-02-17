@@ -30,6 +30,98 @@
             <TextBlock Text="TrayStats" FontSize="11" Foreground="#80FFFFFF"
                        FontWeight="SemiBold" Margin="4,2,4,6" />
 
+            <!-- ==================== Weather Row ==================== -->
+            <Border Style="{StaticResource MetricRowStyle}"
+                    MouseLeftButtonDown="WeatherRow_Click">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Weather.WeatherIcon}" FontFamily="Segoe UI Symbol"
+                                       FontSize="22" Foreground="#FFFFC107" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Weather.City}" Foreground="#B0FFFFFF" FontSize="11"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Weather.Temperature, StringFormat={}{0:F0}°}"
+                                               Foreground="#DDFFFFFF" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Weather.WeatherCondition}"
+                                               Foreground="#80FFFFFF" FontSize="11" VerticalAlignment="Bottom" Margin="6,0,0,2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                   Foreground="#60FFFFFF" Margin="4,0"/>
+                    </Grid>
+
+                    <!-- Weather Detail Panel -->
+                    <StackPanel Visibility="{Binding IsWeatherDetailVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,6,0,0">
+                        <Border Background="#20FFFFFF" CornerRadius="4" Padding="8,6" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Feels Like"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Weather.FeelsLike, StringFormat={}{0:F0}°C}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Humidity"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Weather.Humidity, StringFormat={}{0}%}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Wind"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Weather.WindSpeed, StringFormat={}{0:F0} km/h}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- 3-day forecast -->
+                        <ItemsControl ItemsSource="{Binding Weather.Forecast}" Margin="0,4,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#15FFFFFF" CornerRadius="4" Padding="6,4" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding DayName}" Foreground="#90FFFFFF" FontSize="10"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding WeatherIcon}" FontFamily="Segoe UI Symbol"
+                                                       FontSize="18" Foreground="#FFFFC107" HorizontalAlignment="Center" Margin="0,2"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding High, StringFormat={}{0:F0}°}"
+                                                           Foreground="#DDFFFFFF" FontSize="10" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" / " Foreground="#60FFFFFF" FontSize="10"/>
+                                                <TextBlock Text="{Binding Low, StringFormat={}{0:F0}°}"
+                                                           Foreground="#80FFFFFF" FontSize="10"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding PrecipitationProbability, StringFormat={}{0}% rain}"
+                                                       Foreground="#60FFFFFF" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ==================== CPU Row ==================== -->
             <Border Style="{StaticResource MetricRowStyle}"
                     MouseLeftButtonDown="CpuRow_Click">
