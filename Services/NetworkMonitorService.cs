@@ -1,0 +1,135 @@
+using System.Net.NetworkInformation;
+using System.Timers;
+using TrayStats.Models;
+
+namespace TrayStats.Services;
+
+public sealed class NetworkMonitorService : IDisposable
+{
+    private readonly System.Timers.Timer _timer;
+    private long _previousBytesReceived;
+    private long _previousBytesSent;
+    private long _sessionStartReceived;
+    private long _sessionStartSent;
+    private bool _initialized;
+
+    public NetData Data { get; } = new();
+    public event Action? DataUpdated;
+
+    public NetworkMonitorService()
+    {
+        _timer = new System.Timers.Timer(1000);
+        _timer.Elapsed += OnTimerElapsed;
+        _timer.AutoReset = true;
+    }
+
+    public void Start()
+    {
+        InitializeBaseline();
+        _timer.Start();
+    }
+
+    public void Stop() => _timer.Stop();
+
+    private void InitializeBaseline()
+    {
+        var (recv, sent) = GetTotalBytes();
+        _previousBytesReceived = recv;
+        _previousBytesSent = sent;
+        _sessionStartReceived = recv;
+        _sessionStartSent = sent;
+        _initialized = true;
+        UpdateAdapters();
+    }
+
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        try
+        {
+            if (!_initialized) return;
+
+            var (recv, sent) = GetTotalBytes();
+
+            long deltaRecv = recv - _previousBytesReceived;
+            long deltaSent = sent - _previousBytesSent;
+
+            if (deltaRecv < 0) deltaRecv = 0;
+            if (deltaSent < 0) deltaSent = 0;
+
+            Data.DownloadBytesPerSec = deltaRecv;
+            Data.UploadBytesPerSec = deltaSent;
+            Data.TotalDownloaded = recv - _sessionStartReceived;
+            Data.TotalUploaded = sent - _sessionStartSent;
+
+            _previousBytesReceived = recv;
+            _previousBytesSent = sent;
+
+            DataUpdated?.Invoke();
+        }
+        catch
+        {
+            // Swallow network read errors
+        }
+    }
+
+    private static (long received, long sent) GetTotalBytes()
+    {
+        if (!NetworkInterface.GetIsNetworkAvailable())
+            return (0, 0);
+
+        long totalReceived = 0;
+        long totalSent = 0;
+
+        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (ni.OperationalStatus != OperationalStatus.Up)
+                continue;
+
+            if (ni.NetworkInterfaceType is NetworkInterfaceType.Loopback
+                or NetworkInterfaceType.Tunnel)
+                continue;
+
+            var stats = ni.GetIPv4Statistics();
+            totalReceived += stats.BytesReceived;
+            totalSent += stats.BytesSent;
+        }
+
+        return (totalReceived, totalSent);
+    }
+
+    private void UpdateAdapters()
+    {
+        Data.Adapters.Clear();
+        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (ni.NetworkInterfaceType is NetworkInterfaceType.Loopback
+                or NetworkInterfaceType.Tunnel)
+                continue;
+
+            Data.Adapters.Add(new NetAdapterData
+            {
+                Name = ni.Name,
+                Description = ni.Description,
+                Speed = FormatLinkSpeed(ni.Speed),
+                IsActive = ni.OperationalStatus == OperationalStatus.Up
+            });
+        }
+    }
+
+    private static string FormatLinkSpeed(long bitsPerSec)
+    {
+        if (bitsPerSec >= 1_000_000_000)
+            return $"{bitsPerSec / 1_000_000_000.0:F0} Gbps";
+        if (bitsPerSec >= 1_000_000)
+            return $"{bitsPerSec / 1_000_000.0:F0} Mbps";
+        if (bitsPerSec >= 1_000)
+            return $"{bitsPerSec / 1_000.0:F0} Kbps";
+        return $"{bitsPerSec} bps";
+    }
+
+    public void Dispose()
+    {
+        _timer.Stop();
+        _timer.Dispose();
+    }
+}

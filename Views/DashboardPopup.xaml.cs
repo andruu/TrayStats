@@ -1,0 +1,86 @@
+using System.Windows;
+using System.Windows.Input;
+using TrayStats.ViewModels;
+
+namespace TrayStats.Views;
+
+public partial class DashboardPopup : Window
+{
+    private DashboardViewModel? ViewModel => DataContext as DashboardViewModel;
+
+    public DashboardPopup()
+    {
+        InitializeComponent();
+        SizeChanged += OnSizeChanged;
+    }
+
+    public void ShowAtTray()
+    {
+        ApplyMaxHeight();
+        PositionNearTray();
+        Show();
+        Activate();
+    }
+
+    private void ApplyMaxHeight()
+    {
+        var workArea = SystemParameters.WorkArea;
+        MaxHeight = workArea.Height - 20;
+    }
+
+    private void PositionNearTray()
+    {
+        var workArea = SystemParameters.WorkArea;
+
+        Left = workArea.Right - Width - 8;
+
+        double height = ActualHeight > 0 ? ActualHeight : 400;
+        Top = workArea.Bottom - height - 8;
+
+        // Clamp so the top never goes above the work area
+        if (Top < workArea.Top)
+            Top = workArea.Top + 4;
+    }
+
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (IsVisible)
+            PositionNearTray();
+    }
+
+    protected override void OnContentRendered(EventArgs e)
+    {
+        base.OnContentRendered(e);
+        PositionNearTray();
+    }
+
+    private void Window_Deactivated(object? sender, EventArgs e)
+    {
+        Hide();
+    }
+
+    private void CpuRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleCpuDetailCommand.Execute(null);
+    }
+
+    private void GpuRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleGpuDetailCommand.Execute(null);
+    }
+
+    private void RamRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleRamDetailCommand.Execute(null);
+    }
+
+    private void DiskRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleDiskDetailCommand.Execute(null);
+    }
+
+    private void NetRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        ViewModel?.ToggleNetDetailCommand.Execute(null);
+    }
+}
