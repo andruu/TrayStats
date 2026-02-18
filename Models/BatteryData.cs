@@ -9,6 +9,7 @@ public partial class BatteryData : ObservableObject
     [ObservableProperty] private bool _isPluggedIn;
     [ObservableProperty] private float _chargeDischargeRate;
     [ObservableProperty] private float _voltage;
+    [ObservableProperty] private float _adapterPower;
     [ObservableProperty] private string _timeRemaining = "--";
     [ObservableProperty] private float _designedCapacity;
     [ObservableProperty] private float _fullChargeCapacity;

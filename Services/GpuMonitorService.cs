@@ -5,7 +5,11 @@ namespace TrayStats.Services;
 
 public sealed class GpuMonitorService : IMonitorService
 {
+    private const float SwitchThreshold = 10f;
+    private const float IdleThreshold = 15f;
+
     private readonly HardwareContext _context;
+    private IHardware? _currentGpu;
 
     public GpuData Data { get; } = new();
     public event Action? DataUpdated;
@@ -28,6 +32,34 @@ public sealed class GpuMonitorService : IMonitorService
         catch { }
     }
 
+    private static int GpuPriority(HardwareType t) => t switch
+    {
+        HardwareType.GpuNvidia => 3,
+        HardwareType.GpuAmd => 2,
+        HardwareType.GpuIntel => 1,
+        _ => 0
+    };
+
+    private static float GetGpuLoad(IHardware hw)
+    {
+        float coreLoad = 0f;
+        float d3dLoad = 0f;
+        try
+        {
+            foreach (var sensor in hw.Sensors)
+            {
+                if (sensor.Value is not { } val) continue;
+                if (sensor.SensorType != SensorType.Load) continue;
+                if (sensor.Name == "GPU Core")
+                    coreLoad = val;
+                else if (sensor.Name.StartsWith("D3D") && val > d3dLoad)
+                    d3dLoad = val;
+            }
+        }
+        catch { }
+        return coreLoad > 0 ? coreLoad : d3dLoad;
+    }
+
     private void Update()
     {
         var hardware = _context.GetHardware();
@@ -45,56 +77,54 @@ public sealed class GpuMonitorService : IMonitorService
 
         if (gpus.Count == 0) return;
 
-        IHardware? bestGpu = null;
-        float bestLoad = -1f;
+        if (_currentGpu != null && !gpus.Contains(_currentGpu))
+            _currentGpu = null;
 
-        foreach (var hw in gpus)
+        IHardware bestGpu;
+        if (_currentGpu != null && gpus.Count > 1)
         {
-            try
+            float currentLoad = GetGpuLoad(_currentGpu);
+
+            IHardware? challenger = null;
+            float challengerLoad = -1f;
+            foreach (var hw in gpus)
             {
-                float coreLoad = 0f;
-                foreach (var sensor in hw.Sensors)
+                if (ReferenceEquals(hw, _currentGpu)) continue;
+                float load = GetGpuLoad(hw);
+                if (load > challengerLoad)
                 {
-                    if (sensor.Value is not { } val) continue;
-                    if (sensor.SensorType == SensorType.Load)
-                    {
-                        if (sensor.Name == "GPU Core")
-                        {
-                            coreLoad = val;
-                            break;
-                        }
-                        if (sensor.Name.StartsWith("D3D") && val > coreLoad)
-                            coreLoad = val;
-                    }
-                }
-
-                bool isBetter = false;
-                if (bestGpu == null)
-                    isBetter = true;
-                else if (coreLoad > bestLoad)
-                    isBetter = true;
-                else if (coreLoad == bestLoad)
-                {
-                    int Priority(HardwareType t) => t switch
-                    {
-                        HardwareType.GpuNvidia => 3,
-                        HardwareType.GpuAmd => 2,
-                        HardwareType.GpuIntel => 1,
-                        _ => 0
-                    };
-                    isBetter = Priority(hw.HardwareType) > Priority(bestGpu.HardwareType);
-                }
-
-                if (isBetter)
-                {
-                    bestGpu = hw;
-                    bestLoad = coreLoad;
+                    challenger = hw;
+                    challengerLoad = load;
                 }
             }
-            catch { }
+
+            bool shouldSwitch = false;
+            if (challenger != null)
+            {
+                if (currentLoad < IdleThreshold && challengerLoad < IdleThreshold)
+                    shouldSwitch = GpuPriority(challenger.HardwareType) > GpuPriority(_currentGpu.HardwareType);
+                else
+                    shouldSwitch = challengerLoad - currentLoad > SwitchThreshold;
+            }
+
+            bestGpu = shouldSwitch ? challenger! : _currentGpu;
+        }
+        else
+        {
+            IHardware? best = null;
+            float bestLoad = -1f;
+            foreach (var hw in gpus)
+            {
+                float load = GetGpuLoad(hw);
+                bool isBetter = best == null
+                    || load > bestLoad + SwitchThreshold
+                    || (load < IdleThreshold && bestLoad < IdleThreshold && GpuPriority(hw.HardwareType) > GpuPriority(best.HardwareType));
+                if (isBetter) { best = hw; bestLoad = load; }
+            }
+            bestGpu = best ?? gpus[0];
         }
 
-        if (bestGpu == null) return;
+        _currentGpu = bestGpu;
 
         try
         {

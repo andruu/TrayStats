@@ -99,7 +99,26 @@ public sealed class BatteryMonitorService : IMonitorService
                 else if (Data.IsCharging)
                 {
                     Data.StatusText = "Charging";
-                    Data.TimeRemaining = "Charging";
+                    if (Data.ChargeDischargeRate > 0 && Data.FullChargeCapacity > 0 && Data.ChargeLevel < 100)
+                    {
+                        float remainingMwh = Data.FullChargeCapacity * (100f - Data.ChargeLevel) / 100f;
+                        float hoursToFull = remainingMwh / (Data.ChargeDischargeRate * 1000f);
+                        int totalMin = (int)(hoursToFull * 60);
+                        if (totalMin > 0 && totalMin < 1440)
+                        {
+                            int hours = totalMin / 60;
+                            int minutes = totalMin % 60;
+                            Data.TimeRemaining = hours > 0 ? $"{hours}h {minutes}m to full" : $"{minutes}m to full";
+                        }
+                        else
+                        {
+                            Data.TimeRemaining = "Calculating...";
+                        }
+                    }
+                    else
+                    {
+                        Data.TimeRemaining = "Calculating...";
+                    }
                 }
                 else if (status.BatteryLifeTime != -1 && status.BatteryLifeTime > 0)
                 {

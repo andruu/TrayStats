@@ -164,6 +164,12 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         {
             PushValue(BatteryValues, Battery.ChargeLevel);
             BatterySummary = $"{Battery.ChargeLevel:F0}%";
+
+            if (Battery.IsPluggedIn && Battery.ChargeDischargeRate > 0)
+                Battery.AdapterPower = Battery.ChargeDischargeRate + Cpu.PackagePower + Gpu.Power;
+            else
+                Battery.AdapterPower = 0;
+
             OnPropertyChanged(nameof(Battery));
             InvalidateCharts?.Invoke();
         });

@@ -156,7 +156,7 @@ Updates every 3 seconds. Processes are grouped by name (e.g., multiple Chrome in
 | **Fan Speed** | Fan RPM (may show N/A if fans are stopped at idle) |
 | **Power** | GPU power draw |
 
-On systems with multiple GPUs (integrated + discrete), TrayStats automatically detects the active GPU based on D3D usage and switches accordingly.
+On systems with multiple GPUs (integrated + discrete), TrayStats automatically detects the active GPU based on D3D usage. It prefers discrete GPUs (NVIDIA/AMD) when idle and uses hysteresis to prevent flip-flopping between GPUs.
 
 ### RAM
 
@@ -181,8 +181,9 @@ On systems with multiple GPUs (integrated + discrete), TrayStats automatically d
 | **Charge Level** | Current battery percentage with sparkline history |
 | **Charge Bar** | Full-width proportional bar (green when plugged in, amber on battery) |
 | **Status** | Charging, Discharging, or Full |
-| **Time Remaining** | Estimated time to full charge or time remaining on battery |
-| **Rate** | Charge/discharge rate in watts |
+| **Time** | Estimated time to full charge (e.g., "1h 23m to full") or time remaining on battery |
+| **Charge Rate / Drain Rate** | Battery charge or discharge rate in watts (label changes based on state) |
+| **Input Power** | Estimated total adapter wattage when plugged in (charge rate + CPU + GPU power) |
 | **Voltage** | Current battery voltage |
 | **Health** | Battery health percentage (current capacity vs design capacity) |
 | **Design Capacity** | Original battery capacity in mWh |

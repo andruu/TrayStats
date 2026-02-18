@@ -636,6 +636,7 @@
                                     <RowDefinition/>
                                     <RowDefinition/>
                                     <RowDefinition/>
+                                    <RowDefinition/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Status"/>
@@ -646,24 +647,42 @@
                                 <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.TimeRemaining}"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Rate"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource DetailLabel}">
+                                            <Setter Property="Text" Value="Drain Rate"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Battery.IsPluggedIn}" Value="True">
+                                                    <Setter Property="Text" Value="Charge Rate"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.ChargeDischargeRate, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F1} W'}"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Voltage"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailLabel}"
+                                           Text="Input Power"
+                                           Visibility="{Binding Battery.IsPluggedIn, Converter={StaticResource BoolToVis}}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                           Text="{Binding Battery.AdapterPower, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F1} W'}"
+                                           Visibility="{Binding Battery.IsPluggedIn, Converter={StaticResource BoolToVis}}"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Voltage"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.Voltage, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F2} V'}"/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Health"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Health"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.BatteryHealth, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F1}%'}"/>
 
-                                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Design Capacity"/>
-                                <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Design Capacity"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.DesignedCapacity, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F0} mWh'}"/>
 
-                                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Full Charge"/>
-                                <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource DetailValue}"
+                                <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource DetailLabel}" Text="Full Charge"/>
+                                <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource DetailValue}"
                                            Text="{Binding Battery.FullChargeCapacity, Converter={StaticResource SensorValue}, ConverterParameter='{}{0:F0} mWh'}"/>
                             </Grid>
                         </Border>
