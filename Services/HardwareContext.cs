@@ -51,8 +51,19 @@ public sealed class HardwareContext : IDisposable
 
         try
         {
-            try { _computer.Accept(_visitor); }
-            catch { /* hardware topology changed, continue with stale data */ }
+            foreach (var hw in _computer.Hardware)
+            {
+                try
+                {
+                    hw.Update();
+                    foreach (var sub in hw.SubHardware)
+                    {
+                        try { sub.Update(); }
+                        catch { }
+                    }
+                }
+                catch { }
+            }
 
             Interlocked.Increment(ref _tickCount);
             HardwareUpdated?.Invoke();

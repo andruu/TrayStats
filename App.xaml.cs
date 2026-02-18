@@ -20,10 +20,26 @@ public partial class App : Application
     private DispatcherTimer? _iconTimer;
     private IconStyle _iconStyle = IconStyle.MiniChart;
     private TrayMetric _trayMetric = TrayMetric.CPU;
+    private bool _isExiting;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        DispatcherUnhandledException += (_, args) =>
+        {
+            LogException(args.Exception);
+            args.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex) LogException(ex);
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            LogException(args.Exception);
+            args.SetObserved();
+        };
 
         _mutex = new Mutex(true, "TrayStats_SingleInstance", out bool isNew);
         if (!isNew)
@@ -198,16 +214,17 @@ public partial class App : Application
 
     private void TogglePopup()
     {
-        if (_popup == null) return;
+        if (_popup == null || _isExiting) return;
 
         if (_popup.IsVisible)
             _popup.Hide();
-        else
+        else if (!_popup.WasJustDeactivated)
             ShowPopup();
     }
 
     private void ShowPopup()
     {
+        if (_isExiting) return;
         _popup?.ShowAtTray();
     }
 
@@ -290,17 +307,30 @@ public partial class App : Application
 
     private void ExitApp()
     {
+        _isExiting = true;
         _iconTimer?.Stop();
-        _popup?.Close();
+        _popup?.Hide();
         _viewModel?.Dispose();
 
         if (_trayIcon != null)
         {
             _trayIcon.Icon?.Dispose();
             _trayIcon.Dispose();
+            _trayIcon = null;
         }
 
         Shutdown();
+    }
+
+    private static void LogException(Exception ex)
+    {
+        try
+        {
+            var logPath = System.IO.Path.Combine(AppContext.BaseDirectory, "crash.log");
+            var entry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n\n";
+            System.IO.File.AppendAllText(logPath, entry);
+        }
+        catch { }
     }
 
     protected override void OnExit(ExitEventArgs e)

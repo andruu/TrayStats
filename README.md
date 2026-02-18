@@ -65,6 +65,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **Start with Windows** | Optional auto-start via the context menu |
 | **Restart as Admin** | Elevate to get full sensor access without relaunching manually |
 | **Single instance** | Mutex-based enforcement prevents duplicate instances |
+| **Crash recovery** | Auto-restarts on unexpected crashes (up to 3 times in 60 seconds) with crash logging |
 | **Lightweight** | Pure WPF, no Electron, no web views. ~50MB RAM footprint |
 
 ---
