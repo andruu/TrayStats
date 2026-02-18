@@ -115,13 +115,15 @@ The dashboard is a dark-themed popup window that anchors near your system tray. 
 | Stat | Description |
 |---|---|
 | **Current Temp** | Current temperature at your location |
-| **Condition** | Weather condition (Clear, Cloudy, Rain, Snow, etc.) with icon |
+| **Condition** | Weather condition (Clear, Cloudy, Rain, Snow, etc.) with color-coded icon |
 | **Feels Like** | Apparent temperature |
 | **Humidity** | Relative humidity percentage |
 | **Wind** | Wind speed in km/h |
-| **3-Day Forecast** | High/low temps, condition icon, and precipitation probability for the next 3 days |
+| **3-Day Forecast** | High/low temps, color-coded condition icon, and precipitation probability for the next 3 days |
 
 Location is auto-detected via IP geolocation. Weather updates every 15 minutes using the free [Open-Meteo](https://open-meteo.com/) API (no API key required).
+
+Weather icons are color-coded by condition: **yellow** for sun/clear, **white** for clouds/fog, **blue** for rain/showers, **ice blue** for snow/freezing rain, and **purple** for thunderstorms.
 
 ### Top Processes
 
