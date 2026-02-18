@@ -48,6 +48,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public UptimeData Uptime => _uptimeService.Data;
 
     // UI-thread collections for cross-thread-safe binding
+    public ObservableCollection<DailyForecast> ForecastItems { get; } = new();
     public ObservableCollection<ProcessInfo> TopProcesses { get; } = new();
     public ObservableCollection<BluetoothDeviceInfo> BluetoothDevices { get; } = new();
 
@@ -193,6 +194,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     {
         _dispatcher.BeginInvoke(() =>
         {
+            ForecastItems.Clear();
+            foreach (var f in Weather.LatestForecast)
+                ForecastItems.Add(f);
             OnPropertyChanged(nameof(Weather));
         });
     }

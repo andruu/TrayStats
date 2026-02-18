@@ -92,9 +92,10 @@ public sealed class WeatherService : IMonitorService
                 Data.WindSpeed = GetFloat(current, "wind_speed_10m");
 
                 int code = (int)GetFloat(current, "weather_code");
-                var (condition, icon) = WmoWeatherCodes.Decode(code);
+                var (condition, icon, color) = WmoWeatherCodes.Decode(code);
                 Data.WeatherCondition = condition;
                 Data.WeatherIcon = icon;
+                Data.WeatherIconColor = color;
             }
 
             // Daily forecast (skip today = index 0, take next 3 days)
@@ -106,7 +107,7 @@ public sealed class WeatherService : IMonitorService
                 var codes = daily.GetProperty("weather_code");
                 var precip = daily.TryGetProperty("precipitation_probability_max", out var p) ? p : (JsonElement?)null;
 
-                Data.Forecast.Clear();
+                var forecast = new List<DailyForecast>();
 
                 int count = Math.Min(times.GetArrayLength(), 4);
                 for (int i = 1; i < count; i++) // skip today
@@ -115,18 +116,21 @@ public sealed class WeatherService : IMonitorService
                     var dayName = DateTime.TryParse(dateStr, out var dt) ? dt.ToString("ddd") : dateStr ?? "";
 
                     int wmoCode = codes[i].GetInt32();
-                    var (cond, ico) = WmoWeatherCodes.Decode(wmoCode);
+                    var (cond, ico, clr) = WmoWeatherCodes.Decode(wmoCode);
 
-                    Data.Forecast.Add(new DailyForecast
+                    forecast.Add(new DailyForecast
                     {
                         DayName = dayName,
                         High = (float)maxTemps[i].GetDouble(),
                         Low = (float)minTemps[i].GetDouble(),
                         WeatherCondition = cond,
                         WeatherIcon = ico,
+                        WeatherIconColor = clr,
                         PrecipitationProbability = precip.HasValue ? precip.Value[i].GetInt32() : 0
                     });
                 }
+
+                Data.LatestForecast = forecast;
             }
 
             DataUpdated?.Invoke();

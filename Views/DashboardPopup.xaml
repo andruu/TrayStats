@@ -71,7 +71,7 @@
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Weather.WeatherIcon}" FontFamily="Segoe UI Symbol"
-                                       FontSize="22" Foreground="#FFFFC107" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                       FontSize="22" Foreground="{Binding Weather.WeatherIconColor}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Weather.City}" Foreground="#B0FFFFFF" FontSize="11"/>
                                 <StackPanel Orientation="Horizontal">
@@ -118,7 +118,7 @@
                         </Border>
 
                         <!-- 3-day forecast -->
-                        <ItemsControl ItemsSource="{Binding Weather.Forecast}" Margin="0,4,0,0">
+                        <ItemsControl ItemsSource="{Binding ForecastItems}" Margin="0,4,0,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Rows="1"/>
@@ -131,7 +131,7 @@
                                             <TextBlock Text="{Binding DayName}" Foreground="#90FFFFFF" FontSize="10"
                                                        HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding WeatherIcon}" FontFamily="Segoe UI Symbol"
-                                                       FontSize="18" Foreground="#FFFFC107" HorizontalAlignment="Center" Margin="0,2"/>
+                                                       FontSize="18" Foreground="{Binding WeatherIconColor}" HorizontalAlignment="Center" Margin="0,2"/>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <TextBlock Text="{Binding High, StringFormat={}{0:F0}°}"
                                                            Foreground="#DDFFFFFF" FontSize="10" FontWeight="SemiBold"/>
