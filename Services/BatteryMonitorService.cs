@@ -49,6 +49,9 @@ public sealed class BatteryMonitorService : IMonitorService
     {
         try
         {
+            float? powerW = null;
+            float? currentA = null;
+
             foreach (var hw in _context.GetHardware())
             {
                 if (hw.HardwareType != HardwareType.Battery) continue;
@@ -66,10 +69,10 @@ public sealed class BatteryMonitorService : IMonitorService
                             Data.Voltage = val;
                             break;
                         case SensorType.Current:
-                            Data.ChargeDischargeRate = val;
+                            currentA = val;
                             break;
                         case SensorType.Power:
-                            Data.ChargeDischargeRate = val;
+                            powerW = val;
                             break;
                         case SensorType.Energy when sensor.Name.Contains("Designed"):
                             Data.DesignedCapacity = val;
@@ -81,6 +84,13 @@ public sealed class BatteryMonitorService : IMonitorService
                 }
                 break;
             }
+
+            if (powerW.HasValue)
+                Data.ChargeDischargeRate = powerW.Value;
+            else if (currentA.HasValue && Data.Voltage > 0)
+                Data.ChargeDischargeRate = currentA.Value * Data.Voltage;
+            else if (currentA.HasValue)
+                Data.ChargeDischargeRate = currentA.Value;
 
             var status = new SYSTEM_POWER_STATUS();
             if (GetSystemPowerStatus(ref status))
