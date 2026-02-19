@@ -601,18 +601,8 @@
 
                         <comp:SparklineChart x:Name="BatteryChart" Grid.Column="1" Height="40" Margin="4,0"
                             Values="{Binding BatteryValues}"
-                            MinValue="0" MaxValue="100">
-                            <comp:SparklineChart.Style>
-                                <Style TargetType="comp:SparklineChart">
-                                    <Setter Property="StrokeColor" Value="#FFFFC107"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Battery.IsPluggedIn}" Value="True">
-                                            <Setter Property="StrokeColor" Value="#FF4CAF50"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </comp:SparklineChart.Style>
-                        </comp:SparklineChart>
+                            StrokeColor="{Binding Battery.ChargeLevel, Converter={StaticResource BatteryLevelToBrush}}"
+                            MinValue="0" MaxValue="100"/>
 
                         <TextBlock Grid.Column="2" VerticalAlignment="Center"
                                    Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
@@ -689,7 +679,8 @@
 
                         <!-- Battery charge bar -->
                         <ProgressBar Value="{Binding Battery.ChargeLevel}" Minimum="0" Maximum="100"
-                                     Height="10" Margin="0,4,0,0">
+                                     Height="10" Margin="0,4,0,0"
+                                     Foreground="{Binding Battery.ChargeLevel, Converter={StaticResource BatteryLevelToBrush}}">
                             <ProgressBar.Template>
                                 <ControlTemplate TargetType="ProgressBar">
                                     <Grid>
@@ -699,16 +690,6 @@
                                     </Grid>
                                 </ControlTemplate>
                             </ProgressBar.Template>
-                            <ProgressBar.Style>
-                                <Style TargetType="ProgressBar">
-                                    <Setter Property="Foreground" Value="#FFC107"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Battery.IsPluggedIn}" Value="True">
-                                            <Setter Property="Foreground" Value="#4CAF50"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ProgressBar.Style>
                         </ProgressBar>
                     </StackPanel>
                 </StackPanel>

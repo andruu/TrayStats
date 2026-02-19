@@ -53,7 +53,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **GPU monitoring** | Core load, temperature, core/memory clocks, VRAM usage, fan speed, power draw. Auto-detects active GPU on multi-GPU systems |
 | **RAM monitoring** | Used / available / total memory, load percentage |
 | **Disk monitoring** | Per-drive space usage, temperature, read/write speeds |
-| **Battery monitoring** | Charge level, charge/discharge rate, voltage, time remaining, health, design/full charge capacity. Sparkline and charge bar turn green when plugged in |
+| **Battery monitoring** | Charge level, charge/discharge rate, voltage, time remaining, health, design/full charge capacity. Color-coded sparkline and charge bar (green -> yellow -> red based on level) |
 | **Network monitoring** | Real-time download/upload speeds with sparkline history |
 | **Top Processes** | Top 5 CPU-consuming processes with CPU and memory usage |
 | **Bluetooth / Peripherals** | Connected and paired Bluetooth devices with device type icons and connection status |
@@ -180,7 +180,7 @@ On systems with multiple GPUs (integrated + discrete), TrayStats automatically d
 | Stat | Description |
 |---|---|
 | **Charge Level** | Current battery percentage with sparkline history |
-| **Charge Bar** | Full-width proportional bar (green when plugged in, amber on battery) |
+| **Charge Bar** | Full-width proportional bar with gradient color (green at high charge, yellow mid, red/orange low) |
 | **Status** | Charging, Discharging, or Full |
 | **Time** | Estimated time to full charge (e.g., "1h 23m to full") or time remaining on battery |
 | **Charge Rate / Drain Rate** | Battery charge or discharge rate in watts (label changes based on state) |
@@ -190,7 +190,7 @@ On systems with multiple GPUs (integrated + discrete), TrayStats automatically d
 | **Design Capacity** | Original battery capacity in mWh |
 | **Full Charge** | Current full charge capacity in mWh |
 
-The battery section only appears on devices with a battery. The sparkline chart and charge bar turn green when the device is plugged in.
+The battery section only appears on devices with a battery. The sparkline chart and charge bar use a smooth color gradient based on charge level: green (50-100%), yellow (20-50%), orange/red (0-20%).
 
 ### Bluetooth / Peripherals
 
