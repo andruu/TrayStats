@@ -65,6 +65,7 @@ public partial class App : Application
         {
             DataContext = _viewModel
         };
+        _popup.DashboardHidden += () => _viewModel?.SetDashboardActive(false);
 
         CreateTrayIcon();
 
@@ -217,14 +218,20 @@ public partial class App : Application
         if (_popup == null || _isExiting) return;
 
         if (_popup.IsVisible)
+        {
             _popup.Hide();
+            _viewModel?.SetDashboardActive(false);
+        }
         else if (!_popup.WasJustDeactivated)
+        {
             ShowPopup();
+        }
     }
 
     private void ShowPopup()
     {
         if (_isExiting) return;
+        _viewModel?.SetDashboardActive(true);
         _popup?.ShowAtTray();
     }
 

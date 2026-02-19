@@ -75,6 +75,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _batterySummary = "--";
     [ObservableProperty] private string _netSummary = "-- / --";
 
+    private const int BackgroundHwInterval = 5000;
+    private const int ForegroundHwInterval = 1000;
+    private const int BackgroundDiskInterval = 30000;
+    private const int ForegroundDiskInterval = 5000;
+
+    private bool _dashboardActive;
+
     public DashboardViewModel()
     {
         _dispatcher = Application.Current.Dispatcher;
@@ -112,17 +119,49 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         _bluetoothService.DataUpdated += OnBluetoothUpdated;
         _uptimeService.DataUpdated += OnUptimeUpdated;
 
+        // Start in background mode: only HardwareContext (slow), CPU/GPU/RAM/Battery
+        // (via HardwareUpdated), Weather, and Disk (slow) run.
+        _hwContext.SetInterval(BackgroundHwInterval);
         _hwContext.Start();
         _cpuService.Start();
         _gpuService.Start();
         _ramService.Start();
         _batteryService.Start();
-        _netService.Start();
-        _diskService.Start();
         _weatherService.Start();
-        _processService.Start();
-        _bluetoothService.Start();
-        _uptimeService.Start();
+        _diskService.SetInterval(BackgroundDiskInterval);
+        _diskService.Start();
+    }
+
+    public void SetDashboardActive(bool active)
+    {
+        if (_dashboardActive == active) return;
+        _dashboardActive = active;
+
+        if (active)
+        {
+            _hwContext.SetInterval(ForegroundHwInterval);
+            _diskService.SetInterval(ForegroundDiskInterval);
+
+            Task.Run(() =>
+            {
+                _netService.Start();
+                _processService.Start();
+                _bluetoothService.Start();
+                _uptimeService.Start();
+                _hwContext.ForceUpdate();
+            });
+        }
+        else
+        {
+            _hwContext.SetInterval(BackgroundHwInterval);
+
+            _netService.Stop();
+            _processService.Stop();
+            _bluetoothService.Stop();
+            _uptimeService.Stop();
+
+            _diskService.SetInterval(BackgroundDiskInterval);
+        }
     }
 
     private void OnCpuUpdated()

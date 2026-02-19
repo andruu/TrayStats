@@ -18,6 +18,8 @@ public partial class DashboardPopup : Window
 
     public bool WasJustDeactivated => (DateTime.UtcNow - _lastDeactivated).TotalMilliseconds < 300;
 
+    public event Action? DashboardHidden;
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is DashboardViewModel oldVm)
@@ -81,6 +83,7 @@ public partial class DashboardPopup : Window
     {
         _lastDeactivated = DateTime.UtcNow;
         Hide();
+        DashboardHidden?.Invoke();
     }
 
     private void WeatherRow_Click(object sender, MouseButtonEventArgs e)
@@ -136,5 +139,6 @@ public partial class DashboardPopup : Window
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         Hide();
+        DashboardHidden?.Invoke();
     }
 }

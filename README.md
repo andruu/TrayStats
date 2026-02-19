@@ -66,6 +66,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **Restart as Admin** | Elevate to get full sensor access without relaunching manually |
 | **Single instance** | Mutex-based enforcement prevents duplicate instances |
 | **Crash recovery** | Auto-restarts on unexpected crashes (up to 3 times in 60 seconds) with crash logging |
+| **Smart polling** | Two-tier update throttling -- full-speed when dashboard is visible, minimal polling when hidden (only tray icon metric) |
 | **Lightweight** | Pure WPF, no Electron, no web views. ~50MB RAM footprint |
 
 ---
@@ -348,7 +349,7 @@ TrayStats/
 ### Data Flow
 
 ```
-Hardware Sensors (1s polling via HardwareContext)
+Hardware Sensors (HardwareContext)
     |
     v
 Per-hardware Monitor Services (CPU, GPU, RAM, Battery, Disk, etc.)
@@ -359,13 +360,21 @@ DashboardViewModel (ObservableProperties, data binding, UI-thread dispatch)
     +---> DashboardPopup (WPF UI, sparklines, detail panels)
     +---> App.xaml.cs (tray icon update every 2s)
 
-Independent Services (own timers):
-    WeatherService          15 min interval
+Two-tier polling:
+  Dashboard VISIBLE (foreground mode):
+    HardwareContext         1s interval
+    DiskMonitorService      5s interval
+    NetworkMonitorService   1s interval
     ProcessMonitorService   3s interval
     BluetoothMonitorService 15s interval
     UptimeMonitorService    60s interval
-    NetworkMonitorService   1s interval
-    DiskMonitorService      follows HardwareContext tick (every 5th)
+    WeatherService          15 min interval
+
+  Dashboard HIDDEN (background mode):
+    HardwareContext         5s interval (tray icon only)
+    DiskMonitorService      30s interval
+    WeatherService          15 min interval
+    Network, Processes, Bluetooth, Uptime -- STOPPED
 ```
 
 ---

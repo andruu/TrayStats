@@ -38,6 +38,42 @@ public sealed class HardwareContext : IDisposable
     public void Start() => _timer.Start();
     public void Stop() => _timer.Stop();
 
+    public void SetInterval(int ms)
+    {
+        _timer.Interval = ms;
+    }
+
+    public void ForceUpdate()
+    {
+        if (Interlocked.CompareExchange(ref _isUpdating, 1, 0) != 0)
+            return;
+
+        try
+        {
+            foreach (var hw in _computer.Hardware)
+            {
+                try
+                {
+                    hw.Update();
+                    foreach (var sub in hw.SubHardware)
+                    {
+                        try { sub.Update(); }
+                        catch { }
+                    }
+                }
+                catch { }
+            }
+
+            Interlocked.Increment(ref _tickCount);
+            HardwareUpdated?.Invoke();
+        }
+        catch { }
+        finally
+        {
+            Interlocked.Exchange(ref _isUpdating, 0);
+        }
+    }
+
     public IReadOnlyList<IHardware> GetHardware()
     {
         try { return _computer.Hardware.ToList(); }

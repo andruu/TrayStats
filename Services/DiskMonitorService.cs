@@ -29,6 +29,11 @@ public sealed class DiskMonitorService : IMonitorService
 
     public void Stop() => _timer.Stop();
 
+    public void SetInterval(int ms)
+    {
+        _timer.Interval = ms;
+    }
+
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
         try
