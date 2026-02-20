@@ -7,7 +7,6 @@ namespace TrayStats.Views;
 public partial class DashboardPopup : Window
 {
     private DashboardViewModel? ViewModel => DataContext as DashboardViewModel;
-    private DateTime _lastDeactivated;
 
     public DashboardPopup()
     {
@@ -15,8 +14,6 @@ public partial class DashboardPopup : Window
         SizeChanged += OnSizeChanged;
         DataContextChanged += OnDataContextChanged;
     }
-
-    public bool WasJustDeactivated => (DateTime.UtcNow - _lastDeactivated).TotalMilliseconds < 300;
 
     public event Action? DashboardHidden;
 
@@ -81,7 +78,6 @@ public partial class DashboardPopup : Window
 
     private void Window_Deactivated(object? sender, EventArgs e)
     {
-        _lastDeactivated = DateTime.UtcNow;
         Hide();
         DashboardHidden?.Invoke();
     }

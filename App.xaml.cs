@@ -21,6 +21,8 @@ public partial class App : Application
     private IconStyle _iconStyle = IconStyle.MiniChart;
     private TrayMetric _trayMetric = TrayMetric.CPU;
     private bool _isExiting;
+    private bool _dashboardOpen;
+    private DateTime _lastToggle = DateTime.MinValue;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -65,7 +67,12 @@ public partial class App : Application
         {
             DataContext = _viewModel
         };
-        _popup.DashboardHidden += () => _viewModel?.SetDashboardActive(false);
+        _popup.DashboardHidden += () =>
+        {
+            _dashboardOpen = false;
+            _lastToggle = DateTime.UtcNow;
+            _viewModel?.SetDashboardActive(false);
+        };
 
         CreateTrayIcon();
 
@@ -217,20 +224,29 @@ public partial class App : Application
     {
         if (_popup == null || _isExiting) return;
 
-        if (_popup.IsVisible)
+        var now = DateTime.UtcNow;
+        if ((now - _lastToggle).TotalMilliseconds < 400) return;
+        _lastToggle = now;
+
+        if (_dashboardOpen)
         {
+            _dashboardOpen = false;
             _popup.Hide();
             _viewModel?.SetDashboardActive(false);
         }
-        else if (!_popup.WasJustDeactivated)
+        else
         {
-            ShowPopup();
+            _dashboardOpen = true;
+            _viewModel?.SetDashboardActive(true);
+            _popup.ShowAtTray();
         }
     }
 
     private void ShowPopup()
     {
         if (_isExiting) return;
+        _dashboardOpen = true;
+        _lastToggle = DateTime.UtcNow;
         _viewModel?.SetDashboardActive(true);
         _popup?.ShowAtTray();
     }
