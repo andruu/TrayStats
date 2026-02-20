@@ -219,8 +219,8 @@ public class SparklineChart : Canvas
         int count = values.Count;
         double step = w / (count - 1);
 
-        _linePoints = new PointCollection(count);
-        _fillPoints = new PointCollection(count + 2);
+        _linePoints.Clear();
+        _fillPoints.Clear();
 
         for (int i = 0; i < count; i++)
         {

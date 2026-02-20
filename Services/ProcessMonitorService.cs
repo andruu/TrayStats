@@ -8,6 +8,7 @@ public sealed class ProcessMonitorService : IMonitorService
 {
     private readonly System.Timers.Timer _timer;
     private readonly int _processorCount;
+    private readonly string _ownProcessName = Process.GetCurrentProcess().ProcessName;
     private Dictionary<int, (string Name, TimeSpan CpuTime, long MemBytes)> _previousSnapshot = new();
     private DateTime _lastSampleTime;
     private int _isUpdating;
@@ -108,7 +109,8 @@ public sealed class ProcessMonitorService : IMonitorService
 
         var top = grouped
             .Where(kv => !string.Equals(kv.Key, "Idle", StringComparison.OrdinalIgnoreCase)
-                      && !string.Equals(kv.Key, "System", StringComparison.OrdinalIgnoreCase))
+                      && !string.Equals(kv.Key, "System", StringComparison.OrdinalIgnoreCase)
+                      && !string.Equals(kv.Key, _ownProcessName, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(kv => kv.Value.Cpu)
             .Take(5)
             .Select(kv => new ProcessInfo

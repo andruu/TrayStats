@@ -76,7 +76,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _netSummary = "-- / --";
 
     private const int BackgroundHwInterval = 5000;
-    private const int ForegroundHwInterval = 1000;
+    private const int ForegroundHwInterval = 2000;
     private const int BackgroundDiskInterval = 30000;
     private const int ForegroundDiskInterval = 5000;
 
@@ -171,7 +171,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             PushValue(CpuValues, Cpu.TotalLoad);
             CpuSummary = $"{Cpu.TotalLoad:F0}%";
             OnPropertyChanged(nameof(Cpu));
-            InvalidateCharts?.Invoke();
+            if (_dashboardActive) InvalidateCharts?.Invoke();
         });
     }
 
@@ -182,7 +182,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             PushValue(GpuValues, Gpu.CoreLoad);
             GpuSummary = $"{Gpu.CoreLoad:F0}%";
             OnPropertyChanged(nameof(Gpu));
-            InvalidateCharts?.Invoke();
+            if (_dashboardActive) InvalidateCharts?.Invoke();
         });
     }
 
@@ -193,7 +193,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             PushValue(RamValues, Ram.Load);
             RamSummary = $"{Ram.UsedGb:F1} / {Ram.TotalGb:F1} GB";
             OnPropertyChanged(nameof(Ram));
-            InvalidateCharts?.Invoke();
+            if (_dashboardActive) InvalidateCharts?.Invoke();
         });
     }
 
@@ -210,7 +210,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
                 Battery.AdapterPower = 0;
 
             OnPropertyChanged(nameof(Battery));
-            InvalidateCharts?.Invoke();
+            if (_dashboardActive) InvalidateCharts?.Invoke();
         });
     }
 
@@ -222,7 +222,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             PushValue(NetUpValues, Net.UploadBytesPerSec / 1024.0);
             NetSummary = $"{Net.DownloadFormatted} / {Net.UploadFormatted}";
             OnPropertyChanged(nameof(Net));
-            InvalidateCharts?.Invoke();
+            if (_dashboardActive) InvalidateCharts?.Invoke();
         });
     }
 

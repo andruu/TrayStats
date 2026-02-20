@@ -11,6 +11,7 @@ public sealed class HardwareContext : IDisposable
     private readonly UpdateVisitor _visitor = new();
     private int _isUpdating;
     private int _tickCount;
+    private volatile IReadOnlyList<IHardware> _cachedHardware = [];
 
     public event Action? HardwareUpdated;
 
@@ -29,6 +30,7 @@ public sealed class HardwareContext : IDisposable
 
         _computer.Open();
         _computer.Accept(_visitor);
+        RefreshCache();
 
         _timer = new System.Timers.Timer(1000);
         _timer.Elapsed += OnTimerElapsed;
@@ -64,6 +66,7 @@ public sealed class HardwareContext : IDisposable
                 catch { }
             }
 
+            RefreshCache();
             Interlocked.Increment(ref _tickCount);
             HardwareUpdated?.Invoke();
         }
@@ -74,10 +77,12 @@ public sealed class HardwareContext : IDisposable
         }
     }
 
-    public IReadOnlyList<IHardware> GetHardware()
+    public IReadOnlyList<IHardware> GetHardware() => _cachedHardware;
+
+    private void RefreshCache()
     {
-        try { return _computer.Hardware.ToList(); }
-        catch { return []; }
+        try { _cachedHardware = _computer.Hardware.ToList(); }
+        catch { _cachedHardware = []; }
     }
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
@@ -101,6 +106,7 @@ public sealed class HardwareContext : IDisposable
                 catch { }
             }
 
+            RefreshCache();
             Interlocked.Increment(ref _tickCount);
             HardwareUpdated?.Invoke();
         }
