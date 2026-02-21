@@ -190,6 +190,9 @@ public partial class App : Application
             _ => items[0]
         };
         selected.IsChecked = true;
+
+        if (_viewModel != null)
+            _viewModel.NeedsGpuInBackground = metric == TrayMetric.GPU;
     }
 
     private void SetIconStyle(IconStyle style, params MenuItem[] items)

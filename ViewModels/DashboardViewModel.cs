@@ -82,6 +82,23 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 
     private bool _dashboardActive;
 
+    private bool _needsGpuInBackground;
+
+    /// <summary>
+    /// When true, GPU hardware stays enabled even in background mode (e.g. tray icon shows GPU).
+    /// When false, GPU handles are released in background to allow NVIDIA Optimus switching.
+    /// </summary>
+    public bool NeedsGpuInBackground
+    {
+        get => _needsGpuInBackground;
+        set
+        {
+            _needsGpuInBackground = value;
+            if (!_dashboardActive)
+                _hwContext.SetGpuEnabled(value);
+        }
+    }
+
     public DashboardViewModel()
     {
         _dispatcher = Application.Current.Dispatcher;
@@ -139,6 +156,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 
         if (active)
         {
+            _hwContext.SetGpuEnabled(true);
             _hwContext.SetInterval(ForegroundHwInterval);
             _diskService.SetInterval(ForegroundDiskInterval);
 
@@ -154,6 +172,9 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
         else
         {
             _hwContext.SetInterval(BackgroundHwInterval);
+
+            if (!NeedsGpuInBackground)
+                _hwContext.SetGpuEnabled(false);
 
             _netService.Stop();
             _processService.Stop();

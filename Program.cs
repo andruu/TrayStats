@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Win32;
 
 namespace TrayStats;
 
@@ -7,10 +8,17 @@ public static class Program
 {
     private const int MaxRestarts = 3;
     private const int RestartWindowSeconds = 60;
+    private const string GpuPrefKey = @"Software\Microsoft\DirectX\UserGpuPreferences";
+    private const string GpuPrefValue = "GpuPreference=1;";
 
     [STAThread]
     public static void Main(string[] args)
     {
+        if (EnsureIntegratedGpuPreference())
+            return;
+
+        System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
         try
@@ -33,6 +41,42 @@ public static class Program
 
         if (e.IsTerminating)
             RestartSelf([]);
+    }
+
+    /// <summary>
+    /// Registers this exe as "Power saving" (integrated GPU) in the Windows GPU
+    /// preference registry. This is the same mechanism as Windows Settings > Display
+    /// > Graphics. When the preference was not yet set, the process restarts so the
+    /// OS applies it from the start (the preference is read at process creation).
+    /// Returns true if the caller should exit (restart was triggered).
+    /// </summary>
+    private static bool EnsureIntegratedGpuPreference()
+    {
+        try
+        {
+            var exePath = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exePath))
+                return false;
+
+            using var key = Registry.CurrentUser.CreateSubKey(GpuPrefKey, writable: true);
+            var current = key.GetValue(exePath) as string;
+
+            if (string.Equals(current, GpuPrefValue, StringComparison.Ordinal))
+                return false;
+
+            key.SetValue(exePath, GpuPrefValue, RegistryValueKind.String);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = exePath,
+                UseShellExecute = false
+            });
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static void RestartSelf(string[] args)

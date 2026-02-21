@@ -22,7 +22,7 @@ public sealed class HardwareContext : IDisposable
         _computer = new Computer
         {
             IsCpuEnabled = true,
-            IsGpuEnabled = true,
+            IsGpuEnabled = false,
             IsMemoryEnabled = true,
             IsStorageEnabled = true,
             IsBatteryEnabled = true
@@ -43,6 +43,22 @@ public sealed class HardwareContext : IDisposable
     public void SetInterval(int ms)
     {
         _timer.Interval = ms;
+    }
+
+    public void SetGpuEnabled(bool enabled)
+    {
+        SpinWait spin = default;
+        while (Interlocked.CompareExchange(ref _isUpdating, 1, 0) != 0)
+            spin.SpinOnce();
+        try
+        {
+            _computer.IsGpuEnabled = enabled;
+            RefreshCache();
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isUpdating, 0);
+        }
     }
 
     public void ForceUpdate()
