@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Win32;
+using System.Runtime.InteropServices;
 
 namespace TrayStats;
 
@@ -8,15 +8,14 @@ public static class Program
 {
     private const int MaxRestarts = 3;
     private const int RestartWindowSeconds = 60;
-    private const string GpuPrefKey = @"Software\Microsoft\DirectX\UserGpuPreferences";
-    private const string GpuPrefValue = "GpuPreference=1;";
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern IntPtr LoadLibraryW(string lpLibFileName);
 
     [STAThread]
     public static void Main(string[] args)
     {
-        if (EnsureIntegratedGpuPreference())
-            return;
-
+        PreloadLocalD3d9();
         System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
 
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -43,40 +42,15 @@ public static class Program
             RestartSelf([]);
     }
 
-    /// <summary>
-    /// Registers this exe as "Power saving" (integrated GPU) in the Windows GPU
-    /// preference registry. This is the same mechanism as Windows Settings > Display
-    /// > Graphics. When the preference was not yet set, the process restarts so the
-    /// OS applies it from the start (the preference is read at process creation).
-    /// Returns true if the caller should exit (restart was triggered).
-    /// </summary>
-    private static bool EnsureIntegratedGpuPreference()
+    private static void PreloadLocalD3d9()
     {
         try
         {
-            var exePath = Environment.ProcessPath;
-            if (string.IsNullOrEmpty(exePath))
-                return false;
-
-            using var key = Registry.CurrentUser.CreateSubKey(GpuPrefKey, writable: true);
-            var current = key.GetValue(exePath) as string;
-
-            if (string.Equals(current, GpuPrefValue, StringComparison.Ordinal))
-                return false;
-
-            key.SetValue(exePath, GpuPrefValue, RegistryValueKind.String);
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = exePath,
-                UseShellExecute = false
-            });
-            return true;
+            var localDll = Path.Combine(AppContext.BaseDirectory, "d3d9.dll");
+            if (File.Exists(localDll))
+                LoadLibraryW(localDll);
         }
-        catch
-        {
-            return false;
-        }
+        catch { }
     }
 
     private static void RestartSelf(string[] args)

@@ -68,7 +68,7 @@ This project was vibecoded by a developer who missed having quick system stats w
 | **Crash recovery** | Auto-restarts on unexpected crashes (up to 3 times in 60 seconds) with crash logging |
 | **Smart polling** | Two-tier update throttling -- full-speed when dashboard is visible, minimal polling when hidden (only tray icon metric) |
 | **Lightweight** | Pure WPF, no Electron, no web views. Reuses allocations, caches hardware lists, and skips chart rendering when hidden to minimize CPU and GC pressure |
-| **NVIDIA Optimus friendly** | Automatically registers as a power-saving (integrated GPU) app so it never blocks display-mode switching on laptops with hybrid graphics |
+| **NVIDIA Optimus friendly** | Ships a DXVK d3d9 shim that translates WPF's D3D9 calls to Vulkan, preventing NVIDIA Advanced Optimus from blocking display-mode switching on hybrid-graphics laptops |
 
 ---
 
@@ -346,6 +346,7 @@ TrayStats/
 | System.Management | WMI queries as fallback for unsupported hardware |
 | Windows.Devices.Bluetooth | WinRT APIs for accurate Bluetooth connection status |
 | [Open-Meteo API](https://open-meteo.com/) | Free weather data (no API key), current conditions + forecast |
+| [DXVK](https://github.com/doitsujin/dxvk) | Vulkan-based D3D9 shim to prevent NVIDIA Optimus from blocking display-mode switching ([WPF bug workaround](https://github.com/dotnet/wpf/issues/9286)) |
 
 ### Data Flow
 
